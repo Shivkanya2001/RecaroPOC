@@ -1,0 +1,5 @@
+Teamcenter Process Manager
+Teamcenter FSC Service FSC_DEVBOX_DENBG0145VMinfodba
+Teamcenter Dispatcher Scheduler V2412.2024112400
+Teamcenter Global Search Indexing Service
+Active Workspace Indexing Service
