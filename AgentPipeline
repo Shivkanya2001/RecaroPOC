@@ -1,0 +1,136 @@
+pipeline {
+    agent none  // No default agent, specify node in the relevant stages
+
+    parameters {
+        choice(name: 'HOSTNAME', choices: ['All Hostnames'], description: 'Choose a hostname or all hostnames')
+        choice(name: 'SERVICE_LOV', choices: ['Run All Services'], description: 'Choose a service from the list or run all services')
+        choice(name: 'ACTION', choices: ['Start', 'Stop'], description: 'Choose whether to start or stop the selected service')
+    }
+
+    stages {
+        stage('Cleanup Workspace and Setup') {
+            agent any  // This stage can run on any agent
+            steps {
+                script {
+                    def repoDir = 'RecaroPOC'
+                    if (fileExists(repoDir)) {
+                        echo "Directory exists, removing ${repoDir}..."
+                        bat "rmdir /S /Q ${repoDir}"  // Cleanup
+                    }
+
+                    def gitRepoUrl = 'https://github.com/Shivkanya2001/RecaroPOC.git'
+                    def branchName = 'main'
+                    echo "Cloning repository ${gitRepoUrl} on branch ${branchName}"
+                    bat "git clone --branch ${branchName} ${gitRepoUrl}"
+
+                    def servicesList = readFile('RecaroPOC/services.txt').split("\n").collect { it.trim() }
+                    def hostnamesList = readFile('RecaroPOC/hostnames.txt').split("\n").collect { it.trim() }
+
+                    echo "Available services: ${servicesList}"
+                    echo "Available hostnames: ${hostnamesList}"
+
+                    properties([
+                        parameters([
+                            choice(name: 'HOSTNAME', choices: ['All Hostnames'] + hostnamesList, description: 'Choose a hostname or all hostnames'),
+                            choice(name: 'SERVICE_LOV', choices: ['Run All Services'] + servicesList, description: 'Choose a service from the list or run all services'),
+                            choice(name: 'ACTION', choices: ['Start', 'Stop'], description: 'Choose whether to start or stop the selected service')
+                        ])
+                    ])
+                }
+            }
+        }
+
+        stage('Start/Stop Service on Selected Agent') {
+            agent none  // No default agent for this stage
+            steps {
+                script {
+                    def selectedHostname = params.HOSTNAME
+                    def action = params.ACTION
+                    def service = params.SERVICE_LOV
+                    echo "Selected Hostname: ${selectedHostname}"
+                    echo "Action: ${action}"
+                    echo "Service: ${service}"
+
+                    // If 'All Hostnames' is selected, perform the action on all hostnames
+                    if (selectedHostname == 'All Hostnames') {
+                        echo "Performing action on all hostnames"
+                        def hostnamesList = readFile('RecaroPOC/hostnames.txt').split("\n").collect { it.trim() }
+                        hostnamesList.each { currentHostname ->
+                            echo "Performing action on hostname: ${currentHostname}"
+
+                            timeout(time: 10, unit: 'MINUTES') {  // Set a timeout for waiting
+                                echo "Checking if agent ${currentHostname} is online..."
+                                if (isNodeAvailable(currentHostname)) {
+                                    echo "Node ${currentHostname} is online, performing the action..."
+                                    node("${currentHostname}") {
+                                        echo "Running on agent: ${currentHostname}"
+                                        echo "Executing script for service: ${service} with action: ${action}"
+
+                                        if (service == 'Run All Services') {
+                                            echo "Performing action on all services for hostname: ${currentHostname}"
+                                            def servicesList = readFile('RecaroPOC/services.txt').split("\n").collect { it.trim() }
+                                            servicesList.each { serviceName ->
+                                                echo "Running service: ${serviceName}"
+                                                bat """
+                                                    cd RecaroPOC && python list_services.py "${serviceName}" ${action.toLowerCase()}
+                                                """
+                                            }
+                                        } else {
+                                            echo "Performing action on selected service: ${service}"
+                                            bat """
+                                                cd RecaroPOC && python list_services.py "${service}" ${action.toLowerCase()}
+                                            """
+                                        }
+                                    }
+                                } else {
+                                    echo "Agent ${currentHostname} is offline or not available. Skipping this hostname."
+                                }
+                            }
+                        }
+                    } else {
+                        echo "Performing action on selected hostname: ${selectedHostname}"
+                        timeout(time: 10, unit: 'MINUTES') {  // Set a timeout for waiting
+                            echo "Checking if agent ${selectedHostname} is online..."
+                            if (isNodeAvailable(selectedHostname)) {
+                                echo "Node ${selectedHostname} is online, performing the action..."
+                                node("${selectedHostname}") {
+                                    echo "Running on agent: ${selectedHostname}"
+                                    echo "Executing script for service: ${service} with action: ${action}"
+
+                                    if (service == 'Run All Services') {
+                                        echo "Performing action on all services for hostname: ${selectedHostname}"
+                                        def servicesList = readFile('RecaroPOC/services.txt').split("\n").collect { it.trim() }
+                                        servicesList.each { serviceName ->
+                                            echo "Running service: ${serviceName}"
+                                            bat """
+                                                cd RecaroPOC && python list_services.py "${serviceName}" ${action.toLowerCase()}
+                                            """
+                                        }
+                                    } else {
+                                        echo "Performing action on selected service: ${service}"
+                                        bat """
+                                            cd RecaroPOC && python list_services.py "${service}" ${action.toLowerCase()}
+                                        """
+                                    }
+                                }
+                            } else {
+                                echo "Agent ${selectedHostname} is offline or not available. Skipping."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+def isNodeAvailable(String nodeName) {
+    try {
+        def nodeExists = jenkins.model.Jenkins.instance.getNode(nodeName) != null
+        def nodeOnline = nodeExists ? jenkins.model.Jenkins.instance.getNode(nodeName).toComputer().isOnline() : false
+        return nodeOnline
+    } catch (Exception e) {
+        echo "Error checking node ${nodeName}: ${e.getMessage()}"
+        return false
+    }
+}
