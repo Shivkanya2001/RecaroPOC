@@ -3,7 +3,7 @@ pipeline {
 
     parameters {
         // Dropdown to select the service
-        choice(name: 'SERVICE_LOV', choices: ['Run All Services', 'Service1', 'Service2'], description: 'Choose a service from the list or run all services')
+        choice(name: 'SERVICE_LOV', choices: ['Run All Services'], description: 'Choose a service from the list or run all services')
 
         // Dropdown for Start/Stop action
         choice(name: 'ACTION', choices: ['Start', 'Stop'], description: 'Choose whether to start or stop the selected service')
