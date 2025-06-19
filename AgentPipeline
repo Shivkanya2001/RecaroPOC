@@ -2,7 +2,7 @@ pipeline {
     agent none  // No default agent, specify node in the relevant stages
 
     parameters {
-        choice(name: 'HOSTNAME', choices: ['All Hostnames'], description: 'Choose a hostname or all hostnames')
+        choice(name: 'HOSTNAME', choices: [], description: 'Choose a hostname or all hostnames')
         choice(name: 'SERVICE_LOV', choices: ['Run All Services'], description: 'Choose a service from the list or run all services')
         choice(name: 'ACTION', choices: ['Start', 'Stop'], description: 'Choose whether to start or stop the selected service')
     }
@@ -31,7 +31,7 @@ pipeline {
 
                     properties([
                         parameters([
-                            choice(name: 'HOSTNAME', choices: ['All Hostnames'] + hostnamesList, description: 'Choose a hostname or all hostnames'),
+                            choice(name: 'HOSTNAME', choices: hostnamesList, description: 'Choose a hostname or all hostnames'),
                             choice(name: 'SERVICE_LOV', choices: ['Run All Services'] + servicesList, description: 'Choose a service from the list or run all services'),
                             choice(name: 'ACTION', choices: ['Start', 'Stop'], description: 'Choose whether to start or stop the selected service')
                         ])
