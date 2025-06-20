@@ -1,0 +1,11 @@
+{
+  "dev": [
+    "DENBG0166VM",
+    "DENBG0167VM",
+    "DENBG0132VM"
+  ],
+  "prod": [
+    "DENBG0814VM",
+    "IZ_DENBG0167VM"
+  ]
+}
