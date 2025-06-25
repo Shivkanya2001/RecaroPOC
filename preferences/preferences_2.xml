@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<preferences version="10.0">
+  <category name="General">
+  <category_description>Teamcenter Preferences</category_description>
+    <preference name="IZ_EXPORT_CORE_DEBUG_LEVEL" type="String" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Determines the amount of information added to the Teamcenter syslog during execution of Import and export operation. Valid values are error/warning/debug/info/trace. By default log level is set to error.</preference_description>
+      <context name="Teamcenter">
+        <value>error</value>
+      </context>
+    </preference>
+	<preference name="IZ_EXPORT_CORE_MEMORY_THRESHOLD_CALL" type="Integer" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>EzXchange is running within tcserver process. This preference defines the maximum memory can be used by tcserver process after execution of QueryRule during export operation. The export operation would fail and returns appropriate error message if the set limit is exceeded.</preference_description>
+      <context name="Teamcenter">
+        <value>3500</value>
+      </context>
+    </preference>
+    <preference name="IZ_EXPORT_CORE_MEMORY_THRESHOLD_EXPAND" type="Integer" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>EzXchange is running within tcserver process. This preference defines the maximum memory can be used by tcserver process during execution of complete export operation. The export operation would fail and returns appropriate error message if the set limit is exceeded.</preference_description>
+      <context name="Teamcenter">
+        <value>3800</value>
+      </context>
+    </preference>
+	<preference name="IZ_EXPORT_CORE_ROOT_OBJECTS_COUNT_LIMIT" type="Integer" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Defines the limit for maximum number of root objects can be exported after executing the usecase. Root objects are result of main Query rules execution. Export operation fails with appropriate error message if the set limit is exceeded. </preference_description>
+      <context name="Teamcenter">
+        <value>1000</value>
+      </context>
+    </preference>
+    <preference name="IZ_EXPORT_CORE_TOTAL_OBJECTS_COUNT_LIMIT" type="Integer" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Defines the limit for total number of objects can be exported after executing the usecase. Total count includes the result of QueryRule and RelationRule execution. Export operation fails with appropriate error message if the set limit is exceeded.</preference_description>
+      <context name="Teamcenter">
+        <value>1000</value>
+      </context>
+    </preference>
+	<preference name="EzXchange_Export_Usecase_Directory" type="String" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Specifies the name of the directory which would contain the export usecases. The folder with the given name would be created under 'Home' folder of 'infodba' user.All the usecases defined in admin UI will be created under this folder and will be owned by infodba user.</preference_description>
+      <context name="Teamcenter">
+        <value>EzXchange_Usecase</value>
+      </context>
+    </preference>
+	<preference name="EzXchange_Import_Usecase_Directory" type="String" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Specifies the name of the directory which would contain the import usecases. The folder with the given name would be created under 'Home' folder of 'infodba' user.All the usecases define in admin UI will be created under this folder and will be owned by infodba user.</preference_description>
+      <context name="Teamcenter">
+        <value>EzXchange_Import_Usecase</value>
+      </context>
+    </preference>
+	<preference name="EzXchange_Allowed_Admin_Role" type="String" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>Specifies the list of roles that are allowed to access the EzXchange admin UI for defining Export and import usceases. By default,only DBA role is allowed to access the admin UI. Multiple roles can be added to the list. </preference_description>
+      <context name="Teamcenter">
+        <value>DBA</value>
+      </context>
+    </preference>
+	<preference name="EzXchange_Display_Invisible_Properties" type="Logical" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+	<preference_description>When export is executed for property name as '*' that means all the properties of specified type would be exported except the invisible ones.Invisible properties would also be exported when this preference is set to true. By default, the preference is set to false.</preference_description>
+      <context name="Teamcenter">
+        <value>false</value>
+      </context>
+    </preference>
+	
+	<preference name="EzXchange_Exclude_Property_For_Export" type="String" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+    <preference_description>Specifies the list of Teamcenter types and their properties, the mentioned properties would be skipped and no information would be exported about those properties during export operation.</preference_description>
+      <context name="Teamcenter">
+		 <value></value>
+      </context>
+    </preference>
+   
+    <preference name="EzXchange_Exclude_Property_For_Import" type="String" array="true" disabled="false" protectionScope="Site" envEnabled="false">
+    <preference_description>Specifies the list of Teamcenter types and their properties, the mentioned properties would be skipped and no information would be imported about those properties during import operation.</preference_description>
+      <context name="Teamcenter">
+		<value></value>		
+      </context>
+    </preference>
+	
+	<preference name="EzXchange_Unload_Exported_Objects" type="Logical" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+    <preference_description>Unload exported objects from Teamcenter server memory after the export operation is completed. Unload of exported objects would happen only when the preference is set to true, default is false.</preference_description>
+      <context name="Teamcenter">
+		<value>false</value>		
+      </context>
+    </preference>
+	
+	<preference name="EzXchange_Unload_Imported_Objects" type="Logical" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+    <preference_description>Unload imported objects from Teamcenter server memory after the import operation is completed.Unload of imported objects would happen only when the preference is set to true, default is false.</preference_description>
+      <context name="Teamcenter">
+		<value>false</value>		
+      </context>
+    </preference>
+	
+	<preference name="EzXchange_Encode_Json_Respons_To_UTF8" type="Logical" array="false" disabled="false" protectionScope="Site" envEnabled="false">
+    <preference_description>The preference is only applicable for JSON output type and when the export response is redirected to a file. Result file will be written in UTF-8 format when this preference is set to true. By default, it is set to false. </preference_description>
+      <context name="Teamcenter">
+        <value>false</value>       
+      </context>
+    </preference>
+  </category>
+</preferences>
