@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description="A simple script that demonstrates 
 # Add arguments
 parser.add_argument("-u", type=str, help="The username of tc.")
 parser.add_argument("-g", type=str, help="The group of tc.")
-parser.add_argument("-p", type=str, help="The password file name")  # Password file name (not path)
+parser.add_argument("-p", type=str, help="The password file path")  # Password file path
 parser.add_argument("-mode", type=str, help="The mode of the file")
 parser.add_argument("-scope", type=str, help="The scope of the file")
 parser.add_argument("-action", type=str, help="The action of the file")
@@ -29,19 +29,15 @@ logging.basicConfig(
 )
 
 folder_path = r"preferences"  # Folder containing preferences XML files
-target_directory = r"D:/SOFT/Teamcenter13/TC_ROOT/bin"  # Teamcenter bin directory
+target_directory = r"D:/apps/siemens/tc_root/bin"  # Teamcenter bin directory
 
-def read_password_from_file(password_file_name):
-    """Read the password from a file in the same directory as the script."""
+def read_password_from_file(password_file):
+    """Read the password from a file."""
     try:
-        # Check if the file exists in the current working directory
-        if os.path.exists(password_file_name):
-            with open(password_file_name, 'r') as file:
-                return file.read().strip()  # Read the content and remove any trailing newlines/whitespaces
-        else:
-            raise FileNotFoundError(f"The password file '{password_file_name}' does not exist.")
+        with open(password_file, 'r') as file:
+            return file.read().strip()  # Read the content and remove any trailing newlines/whitespaces
     except Exception as e:
-        logging.error(f"Error reading password file {password_file_name}: {e}")
+        logging.error(f"Error reading password file {password_file}: {e}")
         raise
 
 try:
@@ -52,11 +48,11 @@ try:
     logging.info(f"Folder path: {folder_path}")  # Log folder path
     logging.info(f"Target directory: {target_directory}")  # Log target directory
 
-    # Check if the password file name is provided
+    # Check if the password file path is provided
     if args.p:
         password = read_password_from_file(args.p)
     else:
-        raise ValueError("Password file name (-p) is required.")
+        raise ValueError("Password file path (-p) is required.")
     
     # Loop through the files in the folder
     for filename in os.listdir(folder_path):
@@ -66,25 +62,31 @@ try:
         if os.path.isfile(full_path):
             logging.info(f"Processing file: {full_path}")  # Log the file being processed
 
-            # Prepare the command with string formatting, adding .exe to preferences_manager
-            command = f"preferences_manager.exe -u={args.u} -p={password} -g={args.g} -mode={args.mode} -scope={args.scope} -action={args.action} -file={full_path}"
+            # Construct the full file path (absolute path) and include it in the command
+            absolute_file_path = os.path.abspath(full_path)
+            logging.info(f"Absolute file path: {absolute_file_path}")  # Log absolute path for debugging
+
+            # Prepare the command with string formatting
+            preferences_manager_path = r"D:/apps/siemens/tc_root/bin/preferences_manager.exe"
+            command = f"{preferences_manager_path} -u={args.u} -p={password} -g={args.g} -mode={args.mode} -scope={args.scope} -action={args.action} -file={absolute_file_path}"
 
             try:
-                # Run the command using subprocess
+                # Run the command using subprocess, setting the working directory to the target directory
                 result = subprocess.run(
                     ["powershell", "-Command", command],
-                    cwd=target_directory,  # Use the raw string path for `cwd`
+                    cwd=target_directory,  # Use the correct working directory for preferences_manager.exe
                     capture_output=True,
                     text=True,
                     check=True
                 )
                 # Log the result (stdout of the command)
-                logging.info(f"Command executed successfully for {full_path}: {result.stdout}")
+                logging.info(f"Command executed successfully for {absolute_file_path}: {result.stdout}")
 
             except subprocess.CalledProcessError as e:
                 # Log error if the command fails
-                logging.error(f"Error: Command failed for {full_path} with return code {e.returncode}. Output: {e.output}")
-                logging.exception(f"Exception details for {full_path}: {str(e)}")
+                logging.error(f"Error: Command failed for {absolute_file_path} with return code {e.returncode}. Output: {e.output}")
+                logging.error(f"Error Details: {e.stderr}")  # Log stderr for additional information
+                logging.exception(f"Exception details for {absolute_file_path}: {str(e)}")
 
 except FileNotFoundError as fnf_error:
     # Log specific FileNotFoundError
