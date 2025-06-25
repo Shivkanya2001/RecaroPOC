@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description="A simple script that demonstrates 
 # Add arguments
 parser.add_argument("-u", type=str, help="The username of tc.")
 parser.add_argument("-g", type=str, help="The group of tc.")
-parser.add_argument("-p", type=str, help="The password file")
+parser.add_argument("-p", type=str, help="The password file name")  # Password file name (not path)
 parser.add_argument("-mode", type=str, help="The mode of the file")
 parser.add_argument("-scope", type=str, help="The scope of the file")
 parser.add_argument("-action", type=str, help="The action of the file")
@@ -31,6 +31,19 @@ logging.basicConfig(
 folder_path = r"preferences"  # Folder containing preferences XML files
 target_directory = r"D:/SOFT/Teamcenter13/TC_ROOT/bin"  # Teamcenter bin directory
 
+def read_password_from_file(password_file_name):
+    """Read the password from a file in the same directory as the script."""
+    try:
+        # Check if the file exists in the current working directory
+        if os.path.exists(password_file_name):
+            with open(password_file_name, 'r') as file:
+                return file.read().strip()  # Read the content and remove any trailing newlines/whitespaces
+        else:
+            raise FileNotFoundError(f"The password file '{password_file_name}' does not exist.")
+    except Exception as e:
+        logging.error(f"Error reading password file {password_file_name}: {e}")
+        raise
+
 try:
     # Verify if the preferences folder exists
     if not os.path.exists(folder_path):
@@ -39,6 +52,12 @@ try:
     logging.info(f"Folder path: {folder_path}")  # Log folder path
     logging.info(f"Target directory: {target_directory}")  # Log target directory
 
+    # Check if the password file name is provided
+    if args.p:
+        password = read_password_from_file(args.p)
+    else:
+        raise ValueError("Password file name (-p) is required.")
+    
     # Loop through the files in the folder
     for filename in os.listdir(folder_path):
         full_path = os.path.join(folder_path, filename)
@@ -47,8 +66,8 @@ try:
         if os.path.isfile(full_path):
             logging.info(f"Processing file: {full_path}")  # Log the file being processed
 
-            # Prepare the command with string formatting
-            command = f"preferences_manager -u={args.u} -p={args.p} -g={args.g} -mode={args.mode} -scope={args.scope} -action={args.action} -file={full_path}"
+            # Prepare the command with string formatting, adding .exe to preferences_manager
+            command = f"preferences_manager.exe -u={args.u} -p={password} -g={args.g} -mode={args.mode} -scope={args.scope} -action={args.action} -file={full_path}"
 
             try:
                 # Run the command using subprocess
