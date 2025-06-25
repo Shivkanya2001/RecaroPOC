@@ -1,10 +1,26 @@
 import os
 import subprocess
 import logging
+import argparse
 
 # Set up logging configuration with overwrite mode
 log_file = "deployment_log.log"  # Log file name
 
+# Initialize ArgumentParser
+parser = argparse.ArgumentParser(description="A simple script that demonstrates argparse.")
+
+# Add arguments
+parser.add_argument("-u", type=str, help="The username of tc.")
+parser.add_argument("-g", type=str, help="The group of tc.")
+parser.add_argument("-p", type=str, help="The password file")
+parser.add_argument("-mode", type=str, help="The mode of the file")
+parser.add_argument("-scope", type=str, help="The scope of the file")
+parser.add_argument("-action", type=str, help="The action of the file")
+
+# Parse arguments
+args = parser.parse_args()
+
+# Set up logging configuration
 logging.basicConfig(
     filename=log_file,  # Save logs to this file
     level=logging.DEBUG,  # Capture all log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -32,7 +48,7 @@ try:
             logging.info(f"Processing file: {full_path}")  # Log the file being processed
 
             # Prepare the command with string formatting
-            command = f"preferences_manager -u=infodba -p=infodba -g=dba -mode=import -scope=SITE -action=OVERWRITE -file={full_path}"
+            command = f"preferences_manager -u={args.u} -p={args.p} -g={args.g} -mode={args.mode} -scope={args.scope} -action={args.action} -file={full_path}"
 
             try:
                 # Run the command using subprocess
