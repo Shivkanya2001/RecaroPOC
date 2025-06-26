@@ -44,7 +44,7 @@ def get_tc_env_from_profile(profile_path):
         logging.error("Could not extract TC_ROOT and TC_DATA from profilevars.")
         sys.exit(1)
 
-    # Set the environment variables directly in Python
+    # Set the environment variables for subprocess calls
     os.environ['TC_ROOT'] = tc_root
     os.environ['TC_DATA'] = tc_data
 
