@@ -4,7 +4,8 @@ import sys
 import argparse
 import logging
 from datetime import datetime
-TC_ROOT=os.getenv('TC_ROOT')
+
+# Function to set up logger with timestamped filenames
 def setup_logger():
     """Set up a logger to write log messages to a file with timestamped filenames."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -19,53 +20,38 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action,folder, log_file, xml_file):
+def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_file):
     """
     Run the preferences_manager.exe utility from TC_ROOT/bin with the given parameters.
     """
-    logging.info("inside function %s",tc_root)
-    # Define the path to the 'bin' directory inside TC_ROOT
-    bin_dir = os.path.join(tc_root,"bin/")
+    logging.info("inside function %s", tc_root)
 
-    # Log the current working directory before we change it
-    logging.info(f"Current working directory: {os.getcwd()}")
+    # Construct the full path to the XML file inside the folder
+    xml_file_path = os.path.join(folder, xml_file)
+    logging.info(f"Processing XML file: {xml_file_path}")
 
-    # Check if the 'bin' directory exists under TC_ROOT
-    if not os.path.isdir(bin_dir):
-        logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
+    # Check if the XML file exists
+    if not os.path.isfile(xml_file_path):
+        logging.error(f"Error: The XML file does not exist at {xml_file_path}")
         return
 
-    # Change the working directory to the bin directory inside TC_ROOT
-    #os.chdir(bin_dir)
-    logging.info(f"Changed working directory to {bin_dir}.")
+    # Construct the path to the 'bin' directory inside TC_ROOT
+    bin_dir = os.path.join(tc_root, "bin")
+    preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe")
 
     # Construct the full path to the password file inside the security folder
-    password_file_path = os.path.join(tc_root, "security/", password_file_name)
-    logging.info("password file path construted %s",password_file_path)
+    password_file_path = os.path.join(tc_root, "security", password_file_name)
+
+    # Log the password file path
+    logging.info(f"Password file path: {password_file_path}")
 
     # Check if the password file exists
     if not os.path.isfile(password_file_path):
         logging.error(f"Error: The password file does not exist at {password_file_path}")
         return
 
-    # Log the password file path
-    logging.info(f"Password file found at {password_file_path}.")
-
-    preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe" )
-
-    # Construct the full path to the XML file
-    xml_file_path = os.path.join(folder, xml_file)
-    logging.error("xml_file_path %s",xml_file_path)
-
-    # Check if the XML file exists
-    # if not os.path.isfile(xml_file_path):
-    #     logging.error(f"Error: The XML file does not exist at {xml_file_path}")
-    #     return
-
-    preferences_manager_path = os.path.join(tc_root, "bin", "preferences_manager.exe")
-
     # Log the constructed command
-    command = f'{preferences_manager_path} -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
+    command = f'"{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
     logging.info(f"Constructed command: {command}")
 
     try:
@@ -81,9 +67,9 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     except FileNotFoundError as e:
         logging.error(f"Error running the command for {xml_file_path}: {e}")
 
-def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group,scope, mode, action, folder, log_file):
+def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file):
     """
-    Execute the batch file to set TC_ROOT environment variable and then call the preferences_manager.exe for each XML file in preferences folder.
+    Execute the batch file to set TC_ROOT environment variable and then call preferences_manager.exe for each XML file in preferences folder.
     """
     logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
 
@@ -97,14 +83,15 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         logging.error(f"Error executing {bat_file_path}")
         return None
 
-    # Get the environment variable TC_ROOT from the batch file
-    tc_root = "D:/apps/siemens/tc_root/"  # Assuming stdout contains TC_ROOT value
+    # Get the TC_ROOT from the batch output (assuming the batch file sets it)
+    tc_root = "D:/apps/siemens/tc_root"  # This could be extracted from the batch output
     logging.info(f"TC_ROOT set to {tc_root}.")
 
-   
-    
+    # Set the environment variable for TC_ROOT
+    os.environ['TC_ROOT'] = tc_root
+    logging.info(f"Environment variable TC_ROOT set to: {tc_root}")
 
-    # Loop through all XML files in the preferences folder and run the command for each
+    # Loop through all XML files in the preferences folder and run the command for each XML file
     try:
         # List all XML files in the preferences folder
         xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
@@ -113,7 +100,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         # Run the command for each XML file
         for xml_file in xml_files:
             logging.info(f"Processing {xml_file}")
-            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope,mode, action,folder ,log_file, xml_file)
+            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_file)
     
     except Exception as e:
         logging.error(f"Error processing XML files: {e}")
@@ -140,7 +127,7 @@ def main():
     log_file = setup_logger()
 
     # Call the function to process and run the command for each XML file
-    set_environment_variable_from_bat(args.bat_file, args.preferences_manager, args.user, args.password_file, args.group,args.scope, args.mode, args.action, args.folder, log_file)
+    set_environment_variable_from_bat(args.bat_file, args.preferences_manager, args.user, args.password_file, args.group, args.scope, args.mode, args.action, args.folder, log_file)
 
 if __name__ == "__main__":
     main()
