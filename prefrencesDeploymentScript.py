@@ -41,6 +41,10 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
         logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
         return
 
+    # Change the working directory to the bin directory inside TC_ROOT
+    os.chdir(bin_dir)
+    logging.info(f"Changed working directory to {bin_dir}.")
+
     # Construct the full path to the password file inside the security folder
     password_file_path = os.path.join(tc_root, "security", password_file_name)
 
@@ -65,8 +69,8 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command in the 'bin' directory inside TC_ROOT
-        result = subprocess.run(command, capture_output=True, shell=True, cwd=bin_dir, text=True)
+        # Run the command in the 'bin' directory inside TC_ROOT (already changed directory to this)
+        result = subprocess.run(command, capture_output=True, shell=True, text=True)
         
         # Log the result of the command execution
         if result.returncode == 0:
