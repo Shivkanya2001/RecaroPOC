@@ -62,12 +62,12 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         logging.error(f"Error: The XML file does not exist at {xml_file_path}")
         return
 
-    # Log the constructed command to be executed
+    # Log the constructed command
     command = f'"{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -mode={mode} -action={action} -file="{xml_file_path}"'
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command from the bin directory inside TC_ROOT
+        # Run the command from the 'bin' directory inside TC_ROOT
         result = subprocess.run(command, capture_output=True, shell=True, text=True)
 
         # Log the result of the command execution
