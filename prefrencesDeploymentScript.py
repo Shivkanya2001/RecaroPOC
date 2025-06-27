@@ -87,11 +87,11 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         return None
 
     # Capture the environment variables set in the batch file output
-    # Here we manually extract the values you expect from the batch file (assuming batch file sets TC_ROOT and TC_DATA)
-    
+    # Assuming that your batch file sets TC_ROOT and TC_DATA
     tc_root = None
     tc_data = None
 
+    # Extract TC_ROOT and TC_DATA from the batch file output
     for line in result.stdout.splitlines():
         if "TC_ROOT=" in line:
             tc_root = line.split('=')[1].strip()
