@@ -35,7 +35,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         logging.error(f"Error: The XML file does not exist at {xml_file_path}")
         return
 
-    # Construct the path to the 'bin' directory inside TC_ROOT
+    # Construct the path to the 'bin' directory inside TC_ROOT using forward slashes
     bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
     preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe").replace("\\", "/")
 
