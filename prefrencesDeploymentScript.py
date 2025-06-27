@@ -26,17 +26,17 @@ def setup_logger():
 
 def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file):
     """
-    This function constructs the full command to run preferences_manager.exe from the bin folder.
+    This function constructs the full command to run preferences_manager.exe from the bin folder inside TC_ROOT.
     It uses parameters passed dynamically and logs the results to a file.
     """
     # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
-    # Log the current working directory and bin directory
+    # Log the current working directory and the bin directory being checked
     logging.info(f"Current working directory: {os.getcwd()}")
     logging.info(f"Checking for 'bin' directory at {bin_dir}.")
 
-    # Check if the directory exists after TC_ROOT is set
+    # Check if the directory exists under TC_ROOT
     if not os.path.isdir(bin_dir):
         logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
         return
@@ -65,7 +65,7 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command in the 'bin' directory
+        # Run the command in the 'bin' directory inside TC_ROOT
         result = subprocess.run(command, capture_output=True, shell=True, cwd=bin_dir, text=True)
         
         # Log the result of the command execution
