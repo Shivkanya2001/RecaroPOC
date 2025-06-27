@@ -76,7 +76,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     """
     logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
 
-    # Run the batch file to set TC_ROOT environment variable
+    # Run the batch file to set TC_ROOT environment variable and capture the output
     result = subprocess.run([bat_file_path], capture_output=True, shell=True, text=True)
 
     # Log the result of the batch file execution
@@ -86,13 +86,32 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         logging.error(f"Error executing {bat_file_path}")
         return None
 
-    # Get the TC_ROOT from the batch output (assuming the batch file sets it)
-    tc_root = "D:/apps/siemens/tc_root"  # This could be extracted from the batch output
-    logging.info(f"TC_ROOT set to {tc_root}.")
+    # Capture the environment variables set in the batch file
+    # Here you manually extract the values you expect from the batch file
+    # Assuming your batch file sets TC_ROOT and TC_DATA, extract them like this:
+    
+    # Capture environment variables from the output
+    tc_root = None
+    tc_data = None
 
-    # Set the environment variable for TC_ROOT
+    for line in result.stdout.splitlines():
+        if "TC_ROOT=" in line:
+            tc_root = line.split('=')[1].strip()
+        elif "TC_DATA=" in line:
+            tc_data = line.split('=')[1].strip()
+
+    if not tc_root or not tc_data:
+        logging.error("Failed to capture TC_ROOT or TC_DATA from the batch file output.")
+        return None
+
+    logging.info(f"Captured TC_ROOT: {tc_root}")
+    logging.info(f"Captured TC_DATA: {tc_data}")
+
+    # Set the environment variables for TC_ROOT and TC_DATA in Python
     os.environ['TC_ROOT'] = tc_root
+    os.environ['TC_DATA'] = tc_data
     logging.info(f"Environment variable TC_ROOT set to: {tc_root}")
+    logging.info(f"Environment variable TC_DATA set to: {tc_data}")
 
     # Loop through all XML files in the preferences folder and run the command for each XML file
     try:
