@@ -31,7 +31,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
-    # Log the current working directory
+    # Log the current working directory before we change it
     logging.info(f"Current working directory: {os.getcwd()}")
 
     # Check if the 'bin' directory exists under TC_ROOT
