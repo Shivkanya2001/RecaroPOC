@@ -29,7 +29,7 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
     This function constructs the full command to run preferences_manager.exe from the bin folder.
     It uses parameters passed dynamically and logs the results to a file.
     """
-    # Define the path to the 'bin' directory
+    # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
     # Log the start of the command execution and current working directory
