@@ -87,10 +87,6 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         return None
 
     # Capture the environment variables set in the batch file
-    # Here you manually extract the values you expect from the batch file
-    # Assuming your batch file sets TC_ROOT and TC_DATA, extract them like this:
-    
-    # Capture environment variables from the output
     tc_root = None
     tc_data = None
 
