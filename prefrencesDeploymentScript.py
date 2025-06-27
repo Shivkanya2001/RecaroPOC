@@ -20,94 +20,36 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-# Function to execute batch file and extract TC_ROOT from the output
-def run_batch_file(bat_file_path):
-    """Execute the batch file and extract TC_ROOT value."""
-    logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
-
-    # Run the batch file and capture the output
-    result = subprocess.run([bat_file_path], capture_output=True, shell=True, text=True)
-
-    # Check the result and extract TC_ROOT from batch output if successful
-    if result.returncode == 0:
-        logging.info(f"Successfully executed {bat_file_path}")
-        
-        # Assuming the batch file echoes 'set TC_ROOT=' value
-        tc_root = None
-        for line in result.stdout.splitlines():
-            if "set TC_ROOT=" in line:
-                tc_root = line.split('=')[1].strip()
-                logging.info(f"TC_ROOT set to {tc_root}.")
-                break
-        if not tc_root:
-            logging.error("Error: TC_ROOT not found in batch file output.")
-            return None
-        
-        return tc_root
-    else:
-        logging.error(f"Error executing {bat_file_path}")
-        return None
-
-# Function to run the preferences manager with the given parameters
-def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file):
+def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file_path):
     """Run the preferences_manager.exe utility from TC_ROOT/bin with the given parameters."""
     logging.info("inside function %s", tc_root)
-
-    # Construct the path to the 'bin' directory dynamically
-    bin_dir = os.path.join(tc_root, "bin")
-
-    # Log the current working directory before we change it
-    logging.info(f"Current working directory: {os.getcwd()}")
-
-    # Check if the 'bin' directory exists under TC_ROOT
-    if not os.path.isdir(bin_dir):
-        logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
-        return
-
-    # Log the path of the bin directory
-    logging.info(f"Changed working directory to {bin_dir}.")
-
-    # Construct the full path to the password file inside the security folder
-    password_file_path = os.path.join(tc_root, "security", password_file_name)
-    logging.info("Password file path constructed %s", password_file_path)
-
-    # Check if the password file exists
-    if not os.path.isfile(password_file_path):
-        logging.error(f"Error: The password file does not exist at {password_file_path}")
-        return
-
-    logging.info(f"Password file found at {password_file_path}.")
-
-    # Construct the full path to the XML file
-    xml_file_path = os.path.join(tc_root, "preferences", xml_file)
 
     # Check if the XML file exists
     if not os.path.isfile(xml_file_path):
         logging.error(f"Error: The XML file does not exist at {xml_file_path}")
         return
 
-    logging.info(f"Processing XML file: {xml_file_path}")
+    preferences_manager_path = os.path.join(tc_root, "bin", "preferences_manager.exe")
 
-    # Construct the command to run preferences_manager.exe
-    command = f'"{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -mode={mode} -action={action} -file="{xml_file_path}"'
+    # Log the constructed command
+    command = f'{preferences_manager_path} -u={user} -pf="{password_file_name}" -g={group} -mode={mode} -action={action} -file="{xml_file_path}"'
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command
+        # Run the command from the 'bin' directory inside TC_ROOT
         result = subprocess.run(command, capture_output=True, shell=True, text=True)
 
         # Log the result of the command execution
         if result.returncode == 0:
-            logging.info(f"Command executed successfully for {xml_file}!")
+            logging.info(f"Command executed successfully for {xml_file_path}!")
             logging.info(f"Command output:\n{result.stdout}")
         else:
-            logging.error(f"Error executing the command for {xml_file}: {result.stderr}")
+            logging.error(f"Error executing the command for {xml_file_path}: {result.stderr}")
     except FileNotFoundError as e:
-        logging.error(f"Error running the command for {xml_file}: {e}")
+        logging.error(f"Error running the command for {xml_file_path}: {e}")
 
-# Function to set environment variable and process XML files
 def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, mode, action, preferences_folder, log_file):
-    """Execute the batch file to set TC_ROOT environment variable and then call preferences_manager for each XML file."""
+    """Execute the batch file to set TC_ROOT environment variable and then call preferences_manager.exe for each XML file in preferences folder."""
     logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
 
     # Run the batch file to set TC_ROOT environment variable
@@ -130,7 +72,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
 
     logging.info(f"TC_ROOT: {tc_root}")
 
-    # Loop through all XML files in the preferences folder
+    # Loop through all XML files in the preferences folder and run the command for each XML file
     try:
         # List all XML files in the preferences folder
         xml_files = [f for f in os.listdir(preferences_folder) if f.endswith(".xml")]
@@ -138,13 +80,13 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
 
         # Run the command for each XML file
         for xml_file in xml_files:
-            logging.info(f"Processing {xml_file}...")
-            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file)
+            xml_file_path = os.path.join(preferences_folder, xml_file)  # Construct the full XML path
+            logging.info(f"Processing {xml_file_path}...")
+            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file_path)
 
     except Exception as e:
         logging.error(f"Error processing XML files: {e}")
 
-# Main function to parse arguments and execute the workflow
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters.")
