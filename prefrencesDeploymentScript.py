@@ -24,19 +24,17 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file):
+def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file):
     """
-    This function constructs the full command to run preferences_manager.exe from the bin folder inside TC_ROOT.
-    It uses parameters passed dynamically and logs the results to a file.
+    Run the preferences_manager.exe utility from TC_ROOT/bin with the given parameters.
     """
     # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
-    # Log the current working directory and the bin directory being checked
+    # Log the current working directory
     logging.info(f"Current working directory: {os.getcwd()}")
-    logging.info(f"Checking for 'bin' directory at {bin_dir}.")
 
-    # Check if the directory exists under TC_ROOT
+    # Check if the 'bin' directory exists under TC_ROOT
     if not os.path.isdir(bin_dir):
         logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
         return
@@ -64,14 +62,14 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
         logging.error(f"Error: The XML file does not exist at {xml_file_path}")
         return
 
-    # Log the constructed command
+    # Log the constructed command to be executed
     command = f'"{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -mode={mode} -action={action} -file="{xml_file_path}"'
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command in the 'bin' directory inside TC_ROOT (already changed directory to this)
+        # Run the command from the bin directory inside TC_ROOT
         result = subprocess.run(command, capture_output=True, shell=True, text=True)
-        
+
         # Log the result of the command execution
         if result.returncode == 0:
             logging.info(f"Command executed successfully for {xml_file}!")
@@ -110,7 +108,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         # Run the command for each XML file
         for xml_file in xml_files:
             logging.info(f"Processing {xml_file}...")
-            run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file)
+            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file)
     
     except Exception as e:
         logging.error(f"Error processing XML files: {e}")
