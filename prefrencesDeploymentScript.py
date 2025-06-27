@@ -55,15 +55,18 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     logging.info(f"Constructed command: {command}")
 
     try:
-        # Run the command from the 'bin' directory inside TC_ROOT
+        # Run the command from the 'bin' directory inside TC_ROOT and capture stdout and stderr
         result = subprocess.run(command, capture_output=True, shell=True, text=True)
 
-        # Log the result of the command execution
+        # Capture and log both stdout and stderr
         if result.returncode == 0:
             logging.info(f"Command executed successfully for {xml_file_path}!")
-            logging.info(f"Command output:\n{result.stdout}")
+            logging.info(f"Command output (stdout):\n{result.stdout}")
         else:
             logging.error(f"Error executing the command for {xml_file_path}: {result.stderr}")
+            logging.error(f"Command failed with error code {result.returncode}")
+            logging.error(f"stderr output: {result.stderr}")
+            logging.error(f"stdout output: {result.stdout}")
     except FileNotFoundError as e:
         logging.error(f"Error running the command for {xml_file_path}: {e}")
 
