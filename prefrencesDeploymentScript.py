@@ -28,7 +28,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     """
     logging.info("Inside function %s", tc_root)
 
-    # Use TC_ROOT environment variable directly to define the bin directory
+    # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
     # Log the current working directory before we change it
@@ -39,8 +39,9 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
         return
 
-    # No need to change the working directory here, we'll use the full path for files
-    logging.info(f"Using 'bin' directory at {bin_dir}.")
+    # Change the working directory to the bin directory inside TC_ROOT
+    os.chdir(bin_dir)
+    logging.info(f"Changed working directory to {bin_dir}.")
 
     # Construct the full path to the password file inside the security folder
     password_file_path = os.path.join(tc_root, "security", password_file_name)
