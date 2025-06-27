@@ -32,11 +32,11 @@ def run_command_in_bin_folder(tc_root, preferences_manager_path, user, password_
     # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
-    # Log the start of the command execution and current working directory
-    logging.info(f"Checking 'bin' directory at {bin_dir}.")
+    # Log the current working directory and bin directory
     logging.info(f"Current working directory: {os.getcwd()}")
-    
-    # Check if the directory exists
+    logging.info(f"Checking for 'bin' directory at {bin_dir}.")
+
+    # Check if the directory exists after TC_ROOT is set
     if not os.path.isdir(bin_dir):
         logging.error(f"Error: The 'bin' directory does not exist at {bin_dir}")
         return
