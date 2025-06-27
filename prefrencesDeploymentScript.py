@@ -26,8 +26,8 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     """
     logging.info("inside function %s", tc_root)
 
-    # Construct the full path to the XML file inside the folder
-    xml_file_path = os.path.join(folder, xml_file)
+    # Construct the full path to the XML file inside the folder, using forward slashes
+    xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
     logging.info(f"Processing XML file: {xml_file_path}")
 
     # Check if the XML file exists
@@ -36,11 +36,11 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         return
 
     # Construct the path to the 'bin' directory inside TC_ROOT
-    bin_dir = os.path.join(tc_root, "bin")
-    preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe")
+    bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
+    preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe").replace("\\", "/")
 
     # Construct the full path to the password file inside the security folder
-    password_file_path = os.path.join(tc_root, "security", password_file_name)
+    password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
 
     # Log the password file path
     logging.info(f"Password file path: {password_file_path}")
@@ -64,9 +64,9 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
             logging.info(f"Command output (stdout):\n{result.stdout}")
         else:
             logging.error(f"Error executing the command for {xml_file_path}: {result.stderr}")
-            logging.error(f"Command failed with error code {result.returncode}")
             logging.error(f"stderr output: {result.stderr}")
             logging.error(f"stdout output: {result.stdout}")
+            logging.error(f"Command failed with error code {result.returncode}")
     except FileNotFoundError as e:
         logging.error(f"Error running the command for {xml_file_path}: {e}")
 
