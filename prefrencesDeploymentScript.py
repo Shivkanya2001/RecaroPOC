@@ -113,9 +113,6 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Environment variable TC_ROOT set to: {tc_root}")
     logging.info(f"Environment variable TC_DATA set to: {tc_data}")
 
-    # Run %TC_DATA%\tc_profilevars command
-    run_profilevars_command(tc_data)
-
     # Loop through all XML files in the preferences folder and run the command for each XML file
     try:
         # List all XML files in the preferences folder
@@ -129,27 +126,6 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     
     except Exception as e:
         logging.error(f"Error processing XML files: {e}")
-
-def run_profilevars_command(tc_data):
-    """Run the %TC_DATA%\tc_profilevars command."""
-    profilevars_command = f'"{tc_data}/tc_profilevars"'
-    logging.info(f"Running command: {profilevars_command}")
-
-    try:
-        # Run the profilevars command
-        result = subprocess.run(profilevars_command, capture_output=True, shell=True, text=True)
-
-        # Capture and log both stdout and stderr
-        if result.returncode == 0:
-            logging.info(f"Command executed successfully for {tc_data}/tc_profilevars!")
-            logging.info(f"Command output (stdout):\n{result.stdout}")
-        else:
-            logging.error(f"Error executing the command for {tc_data}/tc_profilevars: {result.stderr}")
-            logging.error(f"stderr output: {result.stderr}")
-            logging.error(f"stdout output: {result.stdout}")
-            logging.error(f"Command failed with error code {result.returncode}")
-    except FileNotFoundError as e:
-        logging.error(f"Error running the command for {tc_data}/tc_profilevars: {e}")
 
 def main():
     # Set up argument parsing
@@ -172,7 +148,7 @@ def main():
     # Set up logger
     log_file = setup_logger()
 
-    # Call the function to process and run the command for each XML file
+    # Run the batch file to set TC_ROOT and TC_DATA in the environment, then process XML files
     set_environment_variable_from_bat(args.bat_file, args.preferences_manager, args.user, args.password_file, args.group, args.scope, args.mode, args.action, args.folder, log_file)
 
 if __name__ == "__main__":
