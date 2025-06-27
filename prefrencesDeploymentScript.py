@@ -9,11 +9,9 @@ def setup_logger():
     """
     Set up a logger to write log messages to a file with timestamped filenames.
     """
-    # Create a timestamp for the log file name
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = f"preferences_manager_{timestamp}.log"
 
-    # Set up logging configuration
     logging.basicConfig(
         filename=log_file,
         level=logging.DEBUG,
@@ -28,6 +26,8 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     """
     Run the preferences_manager.exe utility from TC_ROOT/bin with the given parameters.
     """
+    logging.info("Inside function %s", tc_root)
+    
     # Define the path to the 'bin' directory inside TC_ROOT
     bin_dir = os.path.join(tc_root, "bin")
 
@@ -45,6 +45,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
 
     # Construct the full path to the password file inside the security folder
     password_file_path = os.path.join(tc_root, "security", password_file_name)
+    logging.info("Password file path constructed %s", password_file_path)
 
     # Check if the password file exists
     if not os.path.isfile(password_file_path):
@@ -81,7 +82,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
 
 def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, mode, action, preferences_folder, log_file):
     """
-    Execute the batch file to set TC_ROOT environment variable and then call the preferences_manager.exe for each XML file in preferences folder.
+    Execute the batch file to set TC_ROOT environment variable and then call the preferences_manager.exe for each XML file in the preferences folder.
     """
     logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
 
@@ -104,19 +105,19 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         # List all XML files in the preferences folder
         xml_files = [f for f in os.listdir(preferences_folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
-        
+
         # Run the command for each XML file
         for xml_file in xml_files:
             logging.info(f"Processing {xml_file}...")
             run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, mode, action, log_file, xml_file)
-    
+
     except Exception as e:
         logging.error(f"Error processing XML files: {e}")
 
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters.")
-    
+
     # Define the arguments expected
     parser.add_argument("preferences_manager", help="The relative or full path to preferences_manager.exe.")
     parser.add_argument("-u", "--user", required=True, help="The user name.")
