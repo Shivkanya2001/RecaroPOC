@@ -4,7 +4,6 @@ import sys
 import argparse
 import logging
 from datetime import datetime
-import glob
 
 # Function to set up logger with timestamped filenames
 def setup_logger():
@@ -31,15 +30,10 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     logging.info(f"Processing XML files: {xml_files}")
 
     for xml_file in xml_files:
-        # Check if xml_file is None or empty
-        if xml_file is None or xml_file.strip() == "":
-            logging.error(f"Skipping invalid XML file path: {xml_file}")
-            continue
-
         # Dynamically construct full XML file path using folder path and file name
         xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
         
-        # Debugging: Log the XML file path
+        # Log the XML file path
         logging.info(f"Constructed XML file path: {xml_file_path}")
 
         # Ensure the XML file path exists
@@ -110,7 +104,8 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     try:
         # If no xml_files are provided, get all XML files in the folder
         if not xml_files:
-            xml_files = glob.glob(os.path.join(folder, "*.xml"))
+            logging.info(f"Getting all XML files from the folder: {folder}")
+            xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
         
         for xml_file in xml_files:
