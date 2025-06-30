@@ -22,22 +22,22 @@ def setup_logger():
 def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files, bat_file_path):
     logging.info("Inside run_preferences_manager with TC_ROOT: %s", tc_root)
 
-    # If xml_files is not provided, get all XML files in the folder
+    # Ensure xml_files is not empty
     if not xml_files:
-        xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
-        logging.info(f"Found XML files in folder: {xml_files}")
+        logging.error("No XML files provided.")
+        return
     
     for xml_file in xml_files:
-        xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
+        xml_file_path = xml_file.replace("\\", "/")  # Ensure it's formatted correctly
         logging.info(f"Processing XML file: {xml_file_path}")
-
-        # Skip if the XML file is empty
-        if os.path.getsize(xml_file_path) == 0:
-            logging.warning(f"Skipping empty file: {xml_file_path}")
-            continue
 
         if not os.path.isfile(xml_file_path):
             logging.error(f"Error: The XML file does not exist at {xml_file_path}")
+            continue
+
+        # Skip empty files
+        if os.path.getsize(xml_file_path) == 0:
+            logging.warning(f"Skipping empty file: {xml_file_path}")
             continue
 
         bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
@@ -50,7 +50,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
             logging.error(f"Error: The password file does not exist at {password_file_path}")
             continue
 
-        # Construct the command to execute the preferences_manager.exe after setting the environment
+        # Construct the command to execute preferences_manager.exe after setting environment
         command = f'"{bat_file_path}" && "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
 
         logging.info(f"Constructed command: {command}")
@@ -96,7 +96,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Set TC_DATA={tc_data}")
 
     try:
-        # Process the XML files
+        # If no xml_files are provided, get all XML files in the folder
         if not xml_files:
             xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
