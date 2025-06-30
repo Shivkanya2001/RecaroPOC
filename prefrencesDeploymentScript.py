@@ -19,33 +19,35 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_preferences_manager_in_combined_subprocess(user, password_file_name, group, scope, mode, action, folder, log_file, xml_file, bat_file_path):
-    logging.info("Executing in a single subprocess using .bat and preferences_manager.exe")
+def get_tc_root_from_bat(bat_file_path):
+    command = f'cmd.exe /c "call \"{bat_file_path}\" && echo %TC_ROOT%"'
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    if result.returncode == 0:
+        lines = result.stdout.strip().splitlines()
+        if lines:
+            return lines[-1].strip()
+    return None
+
+def run_preferences_manager(user, password_file_name, group, scope, mode, action, folder, log_file, xml_file, tc_root):
+    logging.info("Executing preferences_manager.exe with resolved TC_ROOT")
 
     xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
     if not os.path.isfile(xml_file_path):
         logging.error(f"XML file does not exist: {xml_file_path}")
         return
 
-    # Dynamically read TC_ROOT and build paths
-    tc_root_env = os.getenv("TC_ROOT")
-    if not tc_root_env:
-        logging.error("Environment variable TC_ROOT is not set. Make sure the batch file sets it correctly.")
-        return
-
-    preferences_manager_path = os.path.join(tc_root_env, "bin", "preferences_manager.exe").replace("\\", "/")
-    password_file_path = os.path.join(tc_root_env, "security", password_file_name).replace("\\", "/")
+    preferences_manager_path = os.path.join(tc_root, "bin", "preferences_manager.exe").replace("\\", "/")
+    password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
 
     logging.info(f"Using preferences_manager path: {preferences_manager_path}")
     logging.info(f"Using password file path: {password_file_path}")
 
     command = (
-        f'cmd.exe /c "call \"{bat_file_path}\" && '
-        f'{preferences_manager_path} -u={user} -pf=\"{password_file_path}\" '
-        f'-g={group} -scope={scope} -mode={mode} -action={action} -file=\"{xml_file_path}\""'
+        f'"{preferences_manager_path}" -u={user} -pf="{password_file_path}" '
+        f'-g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
     )
 
-    logging.info(f"Running combined command: {command}")
+    logging.info(f"Running command: {command}")
     try:
         result = subprocess.run(command, capture_output=True, shell=True, text=True)
         if result.returncode == 0:
@@ -65,12 +67,17 @@ def set_environment_and_execute(user, password_file_name, group, scope, mode, ac
         logging.error(f"❌ Batch file path is not set or invalid: '{bat_file_path}'")
         return
 
+    tc_root = get_tc_root_from_bat(bat_file_path)
+    if not tc_root:
+        logging.error("❌ Could not extract TC_ROOT from the batch file.")
+        return
+
     try:
         xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
 
         for xml_file in xml_files:
-            run_preferences_manager_in_combined_subprocess(
+            run_preferences_manager(
                 user,
                 password_file_name,
                 group,
@@ -80,14 +87,14 @@ def set_environment_and_execute(user, password_file_name, group, scope, mode, ac
                 folder,
                 log_file,
                 xml_file,
-                bat_file_path
+                tc_root
             )
 
     except Exception as e:
         logging.error(f"Error while processing XML files: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters in a single subprocess.")
+    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters.")
     parser.add_argument("preferences_manager", help="The name of preferences_manager.exe (used for validation only).")
     parser.add_argument("-u", "--user", required=True, help="The user name.")
     parser.add_argument("-g", "--group", required=True, help="The group.")
