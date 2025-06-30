@@ -14,7 +14,7 @@ def setup_logger():
         filename=log_file,
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        filemode="w"
+        filemode="w"  # Ensure the file is overwritten each time the script runs
     )
     logging.info("Logger initialized.")
     return log_file
