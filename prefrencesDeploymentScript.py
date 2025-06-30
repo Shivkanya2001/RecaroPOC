@@ -96,7 +96,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Set TC_DATA={tc_data}")
 
     try:
-        # If no xml_files are provided, get all XML files in the folder
+        # Process the XML files
         if not xml_files:
             xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
@@ -114,11 +114,17 @@ def main():
     parser.add_argument("-scope", "--scope", required=True, help="Preference scope.")
     parser.add_argument("-mode", "--mode", required=True, choices=['import', 'export'], help="Mode of operation.")
     parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="Action type.")
-    parser.add_argument("--folder", required=True, help="Folder containing XML files.")
+    parser.add_argument("--folder", required=False, help="Folder containing XML files. Provide either this or --xml-files, not both.")
     parser.add_argument("-pf", "--password-file", required=True, help="Password file name inside TC security folder.")
-    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process. Leave empty to process all XML files in the folder.")
+    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process. Provide either this or --folder, not both.")
 
     args = parser.parse_args()
+
+    # Ensure that both --folder and --xml-files are not provided together
+    if args.folder and args.xml_files:
+        logging.error("Error: You cannot provide both --folder and --xml-files at the same time.")
+        sys.exit(1)
+
     log_file = setup_logger()
 
     # Read batch file path from environment variable
@@ -130,19 +136,36 @@ def main():
         logging.error(f"Batch file path '{bat_file_path}' does not exist.")
         sys.exit(1)
 
-    set_environment_variable_from_bat(
-        bat_file_path,
-        args.preferences_manager,
-        args.user,
-        args.password_file,
-        args.group,
-        args.scope,
-        args.mode,
-        args.action,
-        args.folder,
-        log_file,
-        args.xml_files  # Pass the list of XML files
-    )
+    # If --folder is provided, process all XML files in that folder
+    if args.folder:
+        set_environment_variable_from_bat(
+            bat_file_path,
+            args.preferences_manager,
+            args.user,
+            args.password_file,
+            args.group,
+            args.scope,
+            args.mode,
+            args.action,
+            args.folder,
+            log_file,
+            []  # No XML files specified, process all files in the folder
+        )
+    elif args.xml_files:
+        # If --xml-files is provided, process only those specific files
+        set_environment_variable_from_bat(
+            bat_file_path,
+            args.preferences_manager,
+            args.user,
+            args.password_file,
+            args.group,
+            args.scope,
+            args.mode,
+            args.action,
+            args.folder,
+            log_file,
+            args.xml_files  # Process the passed XML files
+        )
 
 if __name__ == "__main__":
     main()
