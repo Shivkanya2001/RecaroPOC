@@ -22,18 +22,20 @@ def setup_logger():
 def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files, bat_file_path):
     logging.info("Inside run_preferences_manager with TC_ROOT: %s", tc_root)
 
-    # If xml_files is provided, use them; otherwise, process the folder
+    # Ensure xml_files is not empty
     if not xml_files:
-        xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
-        logging.info(f"Found XML files in folder: {xml_files}")
-    
-    # Process each XML file in the list
+        logging.error("No XML files provided.")
+        return
+
+    logging.info(f"Processing XML files: {xml_files}")
+
     for xml_file in xml_files:
+        # Construct full XML file path
         xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
         logging.info(f"Processing XML file: {xml_file_path}")
 
-        # Ensure XML file exists
-        if not os.path.isfile(xml_file_path):
+        # Ensure the XML file path is not None and exists
+        if xml_file_path is None or not os.path.isfile(xml_file_path):
             logging.error(f"Error: The XML file does not exist at {xml_file_path}")
             continue
 
