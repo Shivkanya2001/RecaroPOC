@@ -30,7 +30,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     logging.info(f"Processing XML files: {xml_files}")
 
     for xml_file in xml_files:
-        # Dynamically construct full XML file path using folder path and file name
+        # Dynamically construct the full XML file path using folder path and file name
         xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
         
         # Log the XML file path
@@ -102,14 +102,19 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Set TC_DATA={tc_data}")
 
     try:
-        # If no xml_files are provided, get all XML files in the folder
-        if not xml_files:
+        # If --folder is provided, get XML files inside the folder
+        if folder and not xml_files:
             logging.info(f"Getting all XML files from the folder: {folder}")
             xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
-        logging.info(f"Found XML files: {xml_files}")
         
-        for xml_file in xml_files:
-            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
+        if xml_files:
+            logging.info(f"Found XML files: {xml_files}")
+            for xml_file in xml_files:
+                xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
+                logging.info(f"Processing XML file: {xml_file_path}")
+                run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
+        else:
+            logging.error("No XML files to process.")
     except Exception as e:
         logging.error(f"Error during XML processing: {e}")
 
@@ -129,7 +134,16 @@ def main():
 
     # Ensure that both --folder and --xml-files are not provided together
     if args.folder and args.xml_files:
-        logging.error("Error: You cannot provide both --folder and --xml-files at the same time.")
+        logging.info("Both --folder and --xml-files provided, using folder location for XML files.")
+        xml_files = args.xml_files
+    elif args.folder:
+        logging.info(f"Processing all XML files from the folder: {args.folder}")
+        xml_files = [f for f in os.listdir(args.folder) if f.endswith(".xml")]
+    elif args.xml_files:
+        logging.info(f"Processing specified XML files: {args.xml_files}")
+        xml_files = args.xml_files
+    else:
+        logging.error("You must provide either --folder or --xml-files.")
         sys.exit(1)
 
     log_file = setup_logger()
@@ -143,36 +157,19 @@ def main():
         logging.error(f"Batch file path '{bat_file_path}' does not exist.")
         sys.exit(1)
 
-    # If --folder is provided, process all XML files in that folder
-    if args.folder:
-        set_environment_variable_from_bat(
-            bat_file_path,
-            args.preferences_manager,
-            args.user,
-            args.password_file,
-            args.group,
-            args.scope,
-            args.mode,
-            args.action,
-            args.folder,
-            log_file,
-            []  # No XML files specified, process all files in the folder
-        )
-    elif args.xml_files:
-        # If --xml-files is provided, process only those specific files
-        set_environment_variable_from_bat(
-            bat_file_path,
-            args.preferences_manager,
-            args.user,
-            args.password_file,
-            args.group,
-            args.scope,
-            args.mode,
-            args.action,
-            args.folder,
-            log_file,
-            args.xml_files  # Process the passed XML files
-        )
+    set_environment_variable_from_bat(
+        bat_file_path,
+        args.preferences_manager,
+        args.user,
+        args.password_file,
+        args.group,
+        args.scope,
+        args.mode,
+        args.action,
+        args.folder,
+        log_file,
+        xml_files
+    )
 
 if __name__ == "__main__":
     main()
