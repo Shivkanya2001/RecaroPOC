@@ -22,7 +22,7 @@ def setup_logger():
 def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files, bat_file_path):
     logging.info("Inside run_preferences_manager with TC_ROOT: %s", tc_root)
 
-    # If xml_files is provided, use them; otherwise, process the folder
+    # Ensure xml_files is not empty
     if not xml_files:
         logging.error("No XML files provided.")
         return
