@@ -75,6 +75,7 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     Execute the batch file to set TC_ROOT environment variable and then call preferences_manager.exe for each XML file in preferences folder.
     """
     logging.info(f"Running batch file {bat_file_path} to set TC_ROOT.")
+    
 
     # Run the batch file to set TC_ROOT environment variable and capture the output
     result = subprocess.run([bat_file_path], capture_output=True, shell=True, text=True)
@@ -87,11 +88,11 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
         return None
 
     # Capture the environment variables set in the batch file output
-    # Assuming that your batch file sets TC_ROOT and TC_DATA
+    # Here we manually extract the values you expect from the batch file (assuming batch file sets TC_ROOT and TC_DATA)
+    
     tc_root = None
     tc_data = None
 
-    # Extract TC_ROOT and TC_DATA from the batch file output
     for line in result.stdout.splitlines():
         if "TC_ROOT=" in line:
             tc_root = line.split('=')[1].strip()
