@@ -14,7 +14,7 @@ def setup_logger():
         filename=log_file,
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        filemode="w"  # Ensure the file is overwritten each time the script runs
+        filemode="w"
     )
     logging.info("Logger initialized.")
     return log_file
@@ -131,7 +131,7 @@ def main():
     parser.add_argument("--xml-files", nargs='*', help="List of XML files to process. Provide either this or --folder, not both.")
 
     args = parser.parse_args()
-
+    log_file = setup_logger()
     # Ensure that both --folder and --xml-files are not provided together
     if args.folder and args.xml_files:
         logging.info("Both --folder and --xml-files provided, using folder location for XML files.")
@@ -146,7 +146,7 @@ def main():
         logging.error("You must provide either --folder or --xml-files.")
         sys.exit(1)
 
-    log_file = setup_logger()
+    
 
     # Read batch file path from environment variable
     bat_file_path = os.environ.get('EXECUTE_SET_TC_CONFIG_BAT')
