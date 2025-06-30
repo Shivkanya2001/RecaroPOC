@@ -19,55 +19,88 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_preferences_through_batch_and_python(preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file):
-    # Read the batch file path from the environment variable
-    bat_file_path = os.environ.get("EXECUTE_SET_TC_CONFIG_BAT")
+def run_preferences_manager_in_combined_subprocess(user, password_file_name, group, scope, mode, action, folder, log_file, xml_file, bat_file_path):
+    logging.info("Executing in a single subprocess using .bat and preferences_manager.exe")
 
-    if not bat_file_path:
-        logging.error("❌ Environment variable 'EXECUTE_SET_TC_CONFIG_BAT' is not set.")
-        sys.exit(1)
+    xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
+    if not os.path.isfile(xml_file_path):
+        logging.error(f"XML file does not exist: {xml_file_path}")
+        return
 
-    if not os.path.isfile(bat_file_path):
-        logging.error(f"❌ Batch file path '{bat_file_path}' does not exist.")
-        sys.exit(1)
+    # Dynamically read TC_ROOT and build paths
+    tc_root_env = os.getenv("TC_ROOT")
+    if not tc_root_env:
+        logging.error("Environment variable TC_ROOT is not set. Make sure the batch file sets it correctly.")
+        return
 
-    # Dynamically build the python command that should run after the .bat file
-    python_command = (
-        f'python run_preferences.py {preferences_manager_path} '
-        f'-u={user} -g={group} -scope={scope} -mode={mode} '
-        f'-action={action} --folder="{folder}" -pf={password_file_name}'
+    preferences_manager_path = os.path.join(tc_root_env, "bin", "preferences_manager.exe").replace("\\", "/")
+    password_file_path = os.path.join(tc_root_env, "security", password_file_name).replace("\\", "/")
+
+    logging.info(f"Using preferences_manager path: {preferences_manager_path}")
+    logging.info(f"Using password file path: {password_file_path}")
+
+    command = (
+        f'cmd.exe /c "call \"{bat_file_path}\" && '
+        f'{preferences_manager_path} -u={user} -pf=\"{password_file_path}\" '
+        f'-g={group} -scope={scope} -mode={mode} -action={action} -file=\"{xml_file_path}\""'
     )
 
-    # Combine the batch file call and the Python script into one Windows command
-    full_command = f'cmd.exe /c "call \"{bat_file_path}\" && {python_command}"'
-    logging.info(f"Executing combined command: {full_command}")
+    logging.info(f"Running combined command: {command}")
+    try:
+        result = subprocess.run(command, capture_output=True, shell=True, text=True)
+        if result.returncode == 0:
+            logging.info(f"✅ Successfully executed for {xml_file_path}")
+            logging.info(result.stdout)
+        else:
+            logging.error(f"❌ Command failed for {xml_file_path}")
+            logging.error(result.stderr)
+    except Exception as e:
+        logging.error(f"Exception while executing command for {xml_file_path}: {e}")
+
+def set_environment_and_execute(user, password_file_name, group, scope, mode, action, folder, log_file):
+    bat_file_path = os.environ.get("EXECUTE_SET_TC_CONFIG_BAT")
+    logging.info(f"Reading batch file path from environment variable: {bat_file_path}")
+
+    if not bat_file_path or not os.path.isfile(bat_file_path):
+        logging.error(f"❌ Batch file path is not set or invalid: '{bat_file_path}'")
+        return
 
     try:
-        result = subprocess.run(full_command, shell=True, text=True)
-        if result.returncode == 0:
-            logging.info("✅ Batch and Python script executed successfully.")
-        else:
-            logging.error(f"❌ Execution failed with return code: {result.returncode}")
+        xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
+        logging.info(f"Found XML files: {xml_files}")
+
+        for xml_file in xml_files:
+            run_preferences_manager_in_combined_subprocess(
+                user,
+                password_file_name,
+                group,
+                scope,
+                mode,
+                action,
+                folder,
+                log_file,
+                xml_file,
+                bat_file_path
+            )
+
     except Exception as e:
-        logging.error(f"Exception during execution: {e}")
+        logging.error(f"Error while processing XML files: {e}")
 
 def main():
-    # Set up argument parsing
-    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters via batch execution.")
-    parser.add_argument("preferences_manager", help="The relative or full path to preferences_manager.exe.")
+    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters in a single subprocess.")
+    parser.add_argument("preferences_manager", help="The name of preferences_manager.exe (used for validation only).")
     parser.add_argument("-u", "--user", required=True, help="The user name.")
     parser.add_argument("-g", "--group", required=True, help="The group.")
     parser.add_argument("-scope", "--scope", required=True, help="The scope.")
     parser.add_argument("-mode", "--mode", required=True, choices=['import', 'export'], help="The mode (import/export).")
-    parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="The action (OVERRIDE/ADD/REMOVE).")
-    parser.add_argument("--folder", required=True, help="The folder containing the XML files (e.g., preferences).")
-    parser.add_argument("-pf", "--password-file", required=True, help="The password file name located in the security folder.")
+    parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="The action.")
+    parser.add_argument("--folder", required=True, help="The folder containing the XML files.")
+    parser.add_argument("-pf", "--password-file", required=True, help="The password file name inside the security folder.")
 
     args = parser.parse_args()
     log_file = setup_logger()
 
-    run_preferences_through_batch_and_python(
-        args.preferences_manager,
+    set_environment_and_execute(
         args.user,
         args.password_file,
         args.group,
