@@ -27,8 +27,10 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         logging.error("No XML files provided.")
         return
     
+    # Process each XML file
     for xml_file in xml_files:
-        xml_file_path = xml_file.replace("\\", "/")  # Ensure it's formatted correctly
+        # Construct full file path from folder and XML file
+        xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
         logging.info(f"Processing XML file: {xml_file_path}")
 
         if not os.path.isfile(xml_file_path):
@@ -50,7 +52,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
             logging.error(f"Error: The password file does not exist at {password_file_path}")
             continue
 
-        # Construct the command to execute preferences_manager.exe after setting environment
+        # Construct the command to execute the preferences_manager.exe after setting the environment
         command = f'"{bat_file_path}" && "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
 
         logging.info(f"Constructed command: {command}")
