@@ -19,43 +19,53 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_file,bat_file_path):
+def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files, bat_file_path):
     logging.info("Inside run_preferences_manager with TC_ROOT: %s", tc_root)
 
-    xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
-    logging.info(f"Processing XML file: {xml_file_path}")
+    # If xml_files is not provided, get all XML files in the folder
+    if not xml_files:
+        xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
+        logging.info(f"Found XML files in folder: {xml_files}")
+    
+    for xml_file in xml_files:
+        xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
+        logging.info(f"Processing XML file: {xml_file_path}")
 
-    if not os.path.isfile(xml_file_path):
-        logging.error(f"Error: The XML file does not exist at {xml_file_path}")
-        return
+        # Skip if the XML file is empty
+        if os.path.getsize(xml_file_path) == 0:
+            logging.warning(f"Skipping empty file: {xml_file_path}")
+            continue
 
-    bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
-    preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe").replace("\\", "/")
-    password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
+        if not os.path.isfile(xml_file_path):
+            logging.error(f"Error: The XML file does not exist at {xml_file_path}")
+            continue
 
-    logging.info(f"Password file path: {password_file_path}")
+        bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
+        preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe").replace("\\", "/")
+        password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
 
-    if not os.path.isfile(password_file_path):
-        logging.error(f"Error: The password file does not exist at {password_file_path}")
-        return
+        logging.info(f"Password file path: {password_file_path}")
 
-    #command = f' "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
-    command = f'"{bat_file_path}" && "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
+        if not os.path.isfile(password_file_path):
+            logging.error(f"Error: The password file does not exist at {password_file_path}")
+            continue
 
+        # Construct the command to execute the preferences_manager.exe after setting the environment
+        command = f'"{bat_file_path}" && "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
 
-    logging.info(f"Constructed command: {command}")
+        logging.info(f"Constructed command: {command}")
 
-    try:
-        result = subprocess.run(command, capture_output=True, shell=True, text=True)
-        if result.returncode == 0:
-            logging.info(f" Successfully executed for {xml_file_path}")
-            logging.info(f"stdout:\n{result.stdout}")
-        else:
-            logging.error(f"Command failed for {xml_file_path}")
-            logging.error(f"stderr: {result.stderr}")
-            logging.error(f"stdout: {result.stdout}")
-    except FileNotFoundError as e:
-        logging.error(f"Exception running command for {xml_file_path}: {e}")
+        try:
+            result = subprocess.run(command, capture_output=True, shell=True, text=True)
+            if result.returncode == 0:
+                logging.info(f"✅ Successfully executed for {xml_file_path}")
+                logging.info(f"stdout:\n{result.stdout}")
+            else:
+                logging.error(f"Command failed for {xml_file_path}")
+                logging.error(f"stderr: {result.stderr}")
+                logging.error(f"stdout: {result.stdout}")
+        except FileNotFoundError as e:
+            logging.error(f"Exception running command for {xml_file_path}: {e}")
 
 def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file):
     logging.info(f"Running batch file: {bat_file_path}")
@@ -86,10 +96,11 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Set TC_DATA={tc_data}")
 
     try:
+        # Pass XML files as an argument
         xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
         for xml_file in xml_files:
-            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_file,bat_file_path)
+            run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
     except Exception as e:
         logging.error(f"Error during XML processing: {e}")
 
@@ -103,6 +114,7 @@ def main():
     parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="Action type.")
     parser.add_argument("--folder", required=True, help="Folder containing XML files.")
     parser.add_argument("-pf", "--password-file", required=True, help="Password file name inside TC security folder.")
+    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process.")
 
     args = parser.parse_args()
     log_file = setup_logger()
