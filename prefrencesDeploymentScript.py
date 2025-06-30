@@ -26,16 +26,21 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
     if not xml_files:
         logging.error("No XML files provided.")
         return
-
-    logging.info(f"Processing XML files: {xml_files}")
+    
+    # Log all provided XML files paths for debugging
+    logging.info(f"XML files passed: {xml_files}")
 
     for xml_file in xml_files:
-        # Construct full XML file path
+        # Check if the xml_file is None or empty string
+        if xml_file is None or xml_file.strip() == "":
+            logging.error(f"Skipping invalid XML file path: {xml_file}")
+            continue
+
+        # Construct full XML file path from folder and file
         xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
         logging.info(f"Processing XML file: {xml_file_path}")
 
-        # Ensure the XML file path is not None and exists
-        if xml_file_path is None or not os.path.isfile(xml_file_path):
+        if not os.path.isfile(xml_file_path):
             logging.error(f"Error: The XML file does not exist at {xml_file_path}")
             continue
 
