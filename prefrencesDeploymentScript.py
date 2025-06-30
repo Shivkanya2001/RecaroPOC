@@ -96,10 +96,11 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
     logging.info(f"Set TC_DATA={tc_data}")
 
     try:
-        # Pass XML files as an argument
+        # If no xml_files are provided, get all XML files in the folder
         if not xml_files:
             xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
+        
         for xml_file in xml_files:
             run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
     except Exception as e:
