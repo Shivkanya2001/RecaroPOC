@@ -37,12 +37,12 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
             continue
 
         # Dynamically construct full XML file path using folder path and file name
-        xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
+        xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
         
         # Debugging: Log the XML file path
         logging.info(f"Constructed XML file path: {xml_file_path}")
 
-        # Ensure the XML file path is not None and exists
+        # Ensure the XML file path exists
         if not os.path.isfile(xml_file_path):
             logging.error(f"Error: The XML file does not exist at {xml_file_path}")
             continue
