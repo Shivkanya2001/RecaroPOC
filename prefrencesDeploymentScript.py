@@ -36,8 +36,8 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
             logging.error(f"Skipping invalid XML file path: {xml_file}")
             continue
 
-        # Construct full XML file path
-        xml_file_path = xml_file.strip().replace("\\", "/")
+        # Dynamically construct full XML file path using folder path and file name
+        xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
         
         # Debugging: Log the XML file path
         logging.info(f"Constructed XML file path: {xml_file_path}")
