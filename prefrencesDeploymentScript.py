@@ -67,7 +67,7 @@ def run_preferences_manager(tc_root, preferences_manager_path, user, password_fi
         except FileNotFoundError as e:
             logging.error(f"Exception running command for {xml_file_path}: {e}")
 
-def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file):
+def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files):
     logging.info(f"Running batch file: {bat_file_path}")
 
     result = subprocess.run([bat_file_path], capture_output=True, shell=True, text=True)
@@ -97,7 +97,8 @@ def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, u
 
     try:
         # Pass XML files as an argument
-        xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
+        if not xml_files:
+            xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
         logging.info(f"Found XML files: {xml_files}")
         for xml_file in xml_files:
             run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
@@ -114,7 +115,7 @@ def main():
     parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="Action type.")
     parser.add_argument("--folder", required=True, help="Folder containing XML files.")
     parser.add_argument("-pf", "--password-file", required=True, help="Password file name inside TC security folder.")
-    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process.")
+    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process. Leave empty to process all XML files in the folder.")
 
     args = parser.parse_args()
     log_file = setup_logger()
@@ -138,7 +139,8 @@ def main():
         args.mode,
         args.action,
         args.folder,
-        log_file
+        log_file,
+        args.xml_files  # Pass the list of XML files
     )
 
 if __name__ == "__main__":
