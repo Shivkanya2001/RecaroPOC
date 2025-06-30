@@ -19,18 +19,54 @@ def setup_logger():
     logging.info("Logger initialized.")
     return log_file
 
-def run_preferences_manager_with_resolved_tcroot(user, password_file_name, group, scope, mode, action, folder, log_file, xml_file, bat_file_path):
+def get_tc_root_and_data_from_bat(bat_file_path):
+    """
+    Executes the batch file and captures TC_ROOT and TC_DATA environment variables.
+    """
+    command = f'cmd.exe /c "call \"{bat_file_path}\" && echo %TC_ROOT% && echo %TC_DATA%"'
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    
+    if result.returncode != 0:
+        logging.error(f"Error running batch file: {result.stderr}")
+        return None, None
+
+    # Extract TC_ROOT and TC_DATA from the result
+    lines = result.stdout.strip().splitlines()
+    if len(lines) < 2:
+        logging.error("Failed to extract TC_ROOT or TC_DATA from batch output.")
+        return None, None
+    
+    tc_root = lines[0].strip()
+    tc_data = lines[1].strip()
+
+    logging.info(f"Extracted TC_ROOT: {tc_root}")
+    logging.info(f"Extracted TC_DATA: {tc_data}")
+
+    return tc_root, tc_data
+
+def run_preferences_manager(user, password_file_name, group, scope, mode, action, folder, log_file, xml_file, bat_file_path):
     logging.info("Executing preferences_manager.exe with resolved TC_ROOT")
+
+    # Get TC_ROOT and TC_DATA from the batch file
+    tc_root, tc_data = get_tc_root_and_data_from_bat(bat_file_path)
+    if not tc_root or not tc_data:
+        logging.error("TC_ROOT or TC_DATA is missing. Exiting.")
+        return
 
     xml_file_path = os.path.join(folder, xml_file).replace("\\", "/")
     if not os.path.isfile(xml_file_path):
         logging.error(f"XML file does not exist: {xml_file_path}")
         return
 
+    preferences_manager_path = os.path.join(tc_root, "bin", "preferences_manager.exe").replace("\\", "/")
+    password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
+
+    logging.info(f"Using preferences_manager path: {preferences_manager_path}")
+    logging.info(f"Using password file path: {password_file_path}")
+
     command = (
         f'cmd.exe /c "call \"{bat_file_path}\" && '
-        f'%TC_ROOT%\\bin\\preferences_manager.exe '
-        f'-u={user} -pf=\"%TC_ROOT%\\security\\{password_file_name}\" '
+        f'"{preferences_manager_path}" -u={user} -pf=\"{password_file_path}\" '
         f'-g={group} -scope={scope} -mode={mode} -action={action} '
         f'-file=\"{xml_file_path}\""'
     )
@@ -60,7 +96,7 @@ def set_environment_and_execute(user, password_file_name, group, scope, mode, ac
         logging.info(f"Found XML files: {xml_files}")
 
         for xml_file in xml_files:
-            run_preferences_manager_with_resolved_tcroot(
+            run_preferences_manager(
                 user,
                 password_file_name,
                 group,
@@ -77,7 +113,7 @@ def set_environment_and_execute(user, password_file_name, group, scope, mode, ac
         logging.error(f"Error while processing XML files: {e}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters in a single subprocess.")
+    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters.")
     parser.add_argument("preferences_manager", help="The name of preferences_manager.exe (used for validation only).")
     parser.add_argument("-u", "--user", required=True, help="The user name.")
     parser.add_argument("-g", "--group", required=True, help="The group.")
