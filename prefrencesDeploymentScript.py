@@ -1,61 +1,175 @@
-import os
 import subprocess
+import os
+import sys
+import argparse
 import logging
+from datetime import datetime
 
-# Set up logging configuration with overwrite mode
-log_file = "deployment_log.log"  # Log file name
-
-logging.basicConfig(
-    filename=log_file,  # Save logs to this file
-    level=logging.DEBUG,  # Capture all log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
-    format="%(asctime)s - %(levelname)s - %(message)s",  # Log format with timestamp, log level, and message
-    filemode='w'  # Overwrite the log file every time the script is run
-)
-
-folder_path = r"preferences"  # Folder containing preferences XML files
-target_directory = r"D:/SOFT/Teamcenter13/TC_ROOT/bin"  # Teamcenter bin directory
-
-try:
-    # Verify if the preferences folder exists
-    if not os.path.exists(folder_path):
-        raise FileNotFoundError(f"The folder '{folder_path}' does not exist.")
+# Function to set up logger with timestamped filenames
+def setup_logger():
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = f"preferences_manager_{timestamp}.log"
     
-    logging.info(f"Folder path: {folder_path}")  # Log folder path
-    logging.info(f"Target directory: {target_directory}")  # Log target directory
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        filemode="w"
+    )
+    logging.info("Logger initialized.")
+    return log_file
 
-    # Loop through the files in the folder
-    for filename in os.listdir(folder_path):
-        full_path = os.path.join(folder_path, filename)
+def run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files, bat_file_path):
+    logging.info("Inside run_preferences_manager with TC_ROOT: %s", tc_root)
 
-        # Check if it's a file (skip directories)
-        if os.path.isfile(full_path):
-            logging.info(f"Processing file: {full_path}")  # Log the file being processed
+    # Ensure xml_files is not empty
+    if not xml_files:
+        logging.error("No XML files provided.")
+        return
+    
+    logging.info(f"Processing XML files: {xml_files}")
 
-            # Prepare the command with string formatting
-            command = f"preferences_manager -u=infodba -p=infodba -g=dba -mode=import -scope=SITE -action=OVERWRITE -file={full_path}"
+    for xml_file in xml_files:
+        # Dynamically construct the full XML file path using folder path and file name
+        xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
+        
+        # Log the XML file path
+        logging.info(f"Constructed XML file path: {xml_file_path}")
 
-            try:
-                # Run the command using subprocess
-                result = subprocess.run(
-                    ["powershell", "-Command", command],
-                    cwd=target_directory,  # Use the raw string path for `cwd`
-                    capture_output=True,
-                    text=True,
-                    check=True
-                )
-                # Log the result (stdout of the command)
-                logging.info(f"Command executed successfully for {full_path}: {result.stdout}")
+        # Ensure the XML file path exists
+        if not os.path.isfile(xml_file_path):
+            logging.error(f"Error: The XML file does not exist at {xml_file_path}")
+            continue
 
-            except subprocess.CalledProcessError as e:
-                # Log error if the command fails
-                logging.error(f"Error: Command failed for {full_path} with return code {e.returncode}. Output: {e.output}")
-                logging.exception(f"Exception details for {full_path}: {str(e)}")
+        # Skip empty files
+        if os.path.getsize(xml_file_path) == 0:
+            logging.warning(f"Skipping empty file: {xml_file_path}")
+            continue
 
-except FileNotFoundError as fnf_error:
-    # Log specific FileNotFoundError
-    logging.error(f"File Not Found Error: {fnf_error}")
+        bin_dir = os.path.join(tc_root, "bin").replace("\\", "/")
+        preferences_manager_path = os.path.join(bin_dir, "preferences_manager.exe").replace("\\", "/")
+        password_file_path = os.path.join(tc_root, "security", password_file_name).replace("\\", "/")
 
-except Exception as e:
-    # Log general exception
-    logging.error(f"Error occurred: {str(e)}")
-    logging.exception("Exception details:")
+        logging.info(f"Password file path: {password_file_path}")
+
+        if not os.path.isfile(password_file_path):
+            logging.error(f"Error: The password file does not exist at {password_file_path}")
+            continue
+
+        # Construct the command to execute the preferences_manager.exe after setting the environment
+        command = f'"{bat_file_path}" && "{preferences_manager_path}" -u={user} -pf="{password_file_path}" -g={group} -scope={scope} -mode={mode} -action={action} -file="{xml_file_path}"'
+
+        logging.info(f"Constructed command: {command}")
+
+        try:
+            result = subprocess.run(command, capture_output=True, shell=True, text=True)
+            if result.returncode == 0:
+                logging.info(f"✅ Successfully executed for {xml_file_path}")
+                logging.info(f"stdout:\n{result.stdout}")
+            else:
+                logging.error(f"Command failed for {xml_file_path}")
+                logging.error(f"stderr: {result.stderr}")
+                logging.error(f"stdout: {result.stdout}")
+        except FileNotFoundError as e:
+            logging.error(f"Exception running command for {xml_file_path}: {e}")
+
+def set_environment_variable_from_bat(bat_file_path, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, xml_files):
+    logging.info(f"Running batch file: {bat_file_path}")
+
+    result = subprocess.run([bat_file_path], capture_output=True, shell=True, text=True)
+
+    if result.returncode != 0:
+        logging.error(f"Failed to execute batch file: {bat_file_path}")
+        logging.error(result.stderr)
+        return
+
+    tc_root = None
+    tc_data = None
+
+    for line in result.stdout.splitlines():
+        if "TC_ROOT=" in line:
+            tc_root = line.split('=')[1].strip()
+        elif "TC_DATA=" in line:
+            tc_data = line.split('=')[1].strip()
+
+    if not tc_root or not tc_data:
+        logging.error("Could not capture TC_ROOT or TC_DATA from batch output.")
+        return
+
+    os.environ['TC_ROOT'] = tc_root
+    os.environ['TC_DATA'] = tc_data
+    logging.info(f"Set TC_ROOT={tc_root}")
+    logging.info(f"Set TC_DATA={tc_data}")
+
+    try:
+        # If --folder is provided, get XML files inside the folder
+        if folder and not xml_files:
+            logging.info(f"Getting all XML files from the folder: {folder}")
+            xml_files = [f for f in os.listdir(folder) if f.endswith(".xml")]
+        
+        if xml_files:
+            logging.info(f"Found XML files: {xml_files}")
+            for xml_file in xml_files:
+                xml_file_path = os.path.join(folder, xml_file.strip()).replace("\\", "/")
+                logging.info(f"Processing XML file: {xml_file_path}")
+                run_preferences_manager(tc_root, preferences_manager_path, user, password_file_name, group, scope, mode, action, folder, log_file, [xml_file], bat_file_path)
+        else:
+            logging.error("No XML files to process.")
+    except Exception as e:
+        logging.error(f"Error during XML processing: {e}")
+
+def main():
+    parser = argparse.ArgumentParser(description="Run preferences_manager.exe with dynamic parameters.")
+    parser.add_argument("preferences_manager", help="Relative or full path to preferences_manager.exe.")
+    parser.add_argument("-u", "--user", required=True, help="Teamcenter username.")
+    parser.add_argument("-g", "--group", required=True, help="Group name.")
+    parser.add_argument("-scope", "--scope", required=True, help="Preference scope.")
+    parser.add_argument("-mode", "--mode", required=True, choices=['import', 'export'], help="Mode of operation.")
+    parser.add_argument("-action", "--action", required=True, choices=['OVERRIDE', 'ADD', 'REMOVE'], help="Action type.")
+    parser.add_argument("--folder", required=False, help="Folder containing XML files. Provide either this or --xml-files, not both.")
+    parser.add_argument("-pf", "--password-file", required=True, help="Password file name inside TC security folder.")
+    parser.add_argument("--xml-files", nargs='*', help="List of XML files to process. Provide either this or --folder, not both.")
+
+    args = parser.parse_args()
+    log_file = setup_logger()
+    # Ensure that both --folder and --xml-files are not provided together
+    if args.folder and args.xml_files:
+        logging.info("Both --folder and --xml-files provided, using folder location for XML files.")
+        xml_files = args.xml_files
+    elif args.folder:
+        logging.info(f"Processing all XML files from the folder: {args.folder}")
+        xml_files = [f for f in os.listdir(args.folder) if f.endswith(".xml")]
+    elif args.xml_files:
+        logging.info(f"Processing specified XML files: {args.xml_files}")
+        xml_files = args.xml_files
+    else:
+        logging.error("You must provide either --folder or --xml-files.")
+        sys.exit(1)
+
+    
+
+    # Read batch file path from environment variable
+    bat_file_path = os.environ.get('EXECUTE_SET_TC_CONFIG_BAT')
+    if not bat_file_path:
+        logging.error("Environment variable 'EXECUTE_SET_TC_CONFIG_BAT' is not set.")
+        sys.exit(1)
+    if not os.path.isfile(bat_file_path):
+        logging.error(f"Batch file path '{bat_file_path}' does not exist.")
+        sys.exit(1)
+
+    set_environment_variable_from_bat(
+        bat_file_path,
+        args.preferences_manager,
+        args.user,
+        args.password_file,
+        args.group,
+        args.scope,
+        args.mode,
+        args.action,
+        args.folder,
+        log_file,
+        xml_files
+    )
+
+if __name__ == "__main__":
+    main()
