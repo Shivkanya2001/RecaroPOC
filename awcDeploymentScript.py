@@ -27,7 +27,6 @@ def setup_logger():
 
 def run_tc_bat_file_and_capture_env(bat_file_path):
     logging.info(f"Running batch file to set TC_ROOT and TC_DATA: {bat_file_path}")
-    # Run the batch file and then 'set' to capture environment variables it sets
     process = subprocess.run(f'cmd /c "{bat_file_path} && set"', capture_output=True, shell=True, text=True)
 
     if process.returncode != 0:
@@ -56,7 +55,7 @@ def run_tc_bat_file_and_capture_env(bat_file_path):
     return tc_root
 
 
-def validate_environment(tc_root,target_path):
+def validate_environment(tc_root, target_path):
     if not tc_root:
         logging.error("Missing required configuration: TC_ROOT")
         sys.exit(1)
@@ -81,8 +80,8 @@ def validate_environment(tc_root,target_path):
     logging.info(f"Validation successful: TC_ROOT={tc_root}, TARGET_PATH={target_path}")
     return stage_path
 
+
 def replace_stage_with_target(stage_path, target_path):
-    # Clear stage directory
     logging.info(f"Clearing stage directory: {stage_path}")
     for item in os.listdir(stage_path):
         item_path = os.path.join(stage_path, item)
@@ -95,7 +94,6 @@ def replace_stage_with_target(stage_path, target_path):
             logging.error(f"Failed to delete {item_path}: {e}")
             sys.exit(1)
 
-    # Copy contents from target_path to stage_path
     logging.info(f"Copying contents from {target_path} to {stage_path}")
     for item in os.listdir(target_path):
         s = os.path.join(target_path, item)
@@ -112,29 +110,41 @@ def replace_stage_with_target(stage_path, target_path):
     logging.info("Stage folder successfully replaced with target folder contents.")
 
 
+def run_awbuild_in_stage(stage_path):
+    awbuild_bat = os.path.join(stage_path, "awbuild.bat")
+    if not os.path.exists(awbuild_bat):
+        logging.error(f"'awbuild.bat' not found in stage folder: {awbuild_bat}")
+        sys.exit(1)
 
+    logging.info(f"Running awbuild.bat inside: {stage_path}")
+    process = subprocess.run(f'cmd /c "{awbuild_bat}"', cwd=stage_path, capture_output=True, text=True, shell=True)
 
+    if process.returncode != 0:
+        logging.error("awbuild.bat failed to execute successfully.")
+        logging.error(f"STDOUT:\n{process.stdout}")
+        logging.error(f"STDERR:\n{process.stderr}")
+        sys.exit(1)
+
+    logging.info("awbuild.bat executed successfully.")
+    logging.info(f"STDOUT:\n{process.stdout}")
+    logging.info(f"STDERR:\n{process.stderr}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import XML Stylesheets to Teamcenter.")
-    parser.add_argument("-target_path", type=str, required=True, help="Directory containing stage folder (searched recursively).")
-    parser.add_argument("-tc-bat", type=str, required=True, help="Path to batch file to set TC environment")
+    parser = argparse.ArgumentParser(description="AWS Stage Manager: Replace stage folder and run awbuild.bat")
+    parser.add_argument("-target_path", type=str, required=True, help="Directory containing stage folder contents to copy")
+    parser.add_argument("-tc_bat", type=str, required=True, help="Path to batch file to set TC environment")
     args = parser.parse_args()
+
     setup_logger()
+    logging.info("Starting AWS stage manager process...")
 
-    logging.info("Starting AWC build  Process...")
     tc_root = run_tc_bat_file_and_capture_env(args.tc_bat)
+    stage_path = validate_environment(tc_root, args.target_path)
+    replace_stage_with_target(stage_path, args.target_path)
+    run_awbuild_in_stage(stage_path)
 
-    exe_path = validate_environment(tc_root,args.target_path)
-
-
-    logging.info(f"Found {len(exe_path)}  to process.")
-
-   
-
- 
-    logging.info("Build completed successfully.")
+    logging.info("Build process completed successfully.")
 
 
 if __name__ == "__main__":
