@@ -6,6 +6,7 @@ import logging
 import shutil
 from pathlib import Path
 from datetime import datetime
+import zipfile
 
 
 def setup_logger():
@@ -53,6 +54,26 @@ def run_tc_bat_file_and_capture_env(bat_file_path):
     logging.info(f"Set TC_DATA={tc_data}")
 
     return tc_root
+
+
+def backup_aws2_folder(tc_root):
+    aws2_path = os.path.join(tc_root, "aws2")
+    if not os.path.exists(aws2_path):
+        logging.warning(f"No aws2 folder found at {aws2_path}, skipping backup.")
+        return
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_zip_path = os.path.join(os.path.dirname(aws2_path), f"aws2_backup_{timestamp}.zip")
+
+    logging.info(f"Creating backup of aws2 folder: {backup_zip_path}")
+    with zipfile.ZipFile(backup_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(aws2_path):
+            for file in files:
+                abs_file_path = os.path.join(root, file)
+                rel_path = os.path.relpath(abs_file_path, os.path.dirname(aws2_path))
+                zipf.write(abs_file_path, rel_path)
+
+    logging.info("Backup completed successfully.")
 
 
 def validate_environment(tc_root, target_path):
@@ -140,6 +161,7 @@ def main():
     logging.info("Starting AWS stage manager process...")
 
     tc_root = run_tc_bat_file_and_capture_env(args.tc_bat)
+    backup_aws2_folder(tc_root)
     stage_path = validate_environment(tc_root, args.target_path)
     replace_stage_with_target(stage_path, args.target_path)
     run_awbuild_in_stage(stage_path)
