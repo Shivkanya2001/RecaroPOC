@@ -56,7 +56,7 @@ def run_tc_bat_file_and_capture_env(bat_file_path):
     return tc_root
 
 
-def validate_environment(tc_root, target_path):
+def validate_environment(tc_root,target_path):
     if not tc_root:
         logging.error("Missing required configuration: TC_ROOT")
         sys.exit(1)
@@ -118,7 +118,7 @@ def replace_stage_with_target(stage_path, target_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Import XML Stylesheets to Teamcenter.")
-    parser.add_argument("-target-path", type=str, required=True, help="Directory containing stage folder (searched recursively).")
+    parser.add_argument("-target_path", type=str, required=True, help="Directory containing stage folder (searched recursively).")
     parser.add_argument("-tc-bat", type=str, required=True, help="Path to batch file to set TC environment")
     args = parser.parse_args()
     setup_logger()
@@ -126,13 +126,12 @@ def main():
     logging.info("Starting AWC build  Process...")
     tc_root = run_tc_bat_file_and_capture_env(args.tc_bat)
 
-    exe_path = validate_environment(install_user, install_group, tc_root)
+    exe_path = validate_environment(tc_root,args.target_path)
 
 
-    logging.info(f"Found {len(xml_files)} XML files to process.")
+    logging.info(f"Found {len(exe_path)}  to process.")
 
-    if not prepare_input_file(xml_files, STAGING_DIR, INPUT_FILE):
-        sys.exit(1)
+   
 
  
     logging.info("Build completed successfully.")
