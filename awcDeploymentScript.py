@@ -132,7 +132,7 @@ def replace_stage_with_target(stage_path, target_path):
 
 
 def run_awbuild_in_stage(stage_path):
-    awbuild_bat = os.path.join(stage_path, "awbuild.bat")
+    awbuild_bat = os.path.join(stage_path, "awbuild.cmd")
     if not os.path.exists(awbuild_bat):
         logging.error(f"'awbuild.bat' not found in stage folder: {awbuild_bat}")
         sys.exit(1)
