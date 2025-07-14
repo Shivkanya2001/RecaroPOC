@@ -9,3 +9,7 @@ python .\\prefrencesDeploymentScript.py preferences_manager.exe -u infodba -g db
 stylesheet command
 
 python .\stylesheet.py -target-path "C:\RecaroPythonProject\RecaroPOC\stylesheet" -pwf-file "config1_infodba.pwf" -install-user "infodba" -install-group "dba" -tc-bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat"
+
+
+AWS Bulid
+ python .\awcDeploymentScript.py -target_path "C:\Users\infodba\Downloads\stage\stage" -tc_bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat"
