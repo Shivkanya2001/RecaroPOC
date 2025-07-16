@@ -37,3 +37,5 @@ scipt for generate package
 Bmide deploy using tem.bat
  
 "D:\apps\siemens\tc_root\install\tem.bat" -update -templates=t5recaro -full -pf="D:\apps\siemens\tc_root\security\config1_infodba.pwf" -verbose -path="D:\apps\siemens\tc_root\bmide\workspace\t5recaro\output\wntx64\packaging\full_update\t5recaro_wntx64_1.0_2412_2025_07_15_10-17-52" -fullkit="D:\tc2412_wntx64
+
+ python .\Bmide_generate_deploy.py -tc_bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat" -template "b2testpoc" -pf_file "config1_infodba.pwf" -version "1.0_2412" -fullkit_path "D:\tc2412_wntx64" --path "D:\apps\siemens\tc_root\bmide\workspace\b2testpoc\output\wntx64\packaging\full_update\b2testpoc_wntx64_1.0_1_2412_2025_07_15_13-50-30"
