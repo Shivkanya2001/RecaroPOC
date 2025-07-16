@@ -13,3 +13,22 @@ python .\stylesheet.py -target-path "C:\RecaroPythonProject\RecaroPOC\stylesheet
 
 AWS Bulid
  python .\awcDeploymentScript.py -target_path "C:\Users\infodba\Downloads\stage\stage" -tc_bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat"
+
+
+BMIDE Package generate 
+
+ bmide_generate_package
+-projectLocation="D:\apps\siemens\tc_root\bmide\workspace\t5recaro"
+-packageLocation=D:\apps\siemens\tc_root\bmide\workspace\t5recaro\output
+-dependencyTemplateFolder=D:\apps\siemens\tc_data\model
+-codeGenerationFolder="D:\apps\siemens\tc_root\bmide\workspace\t5recaro\output\wntx64"
+-softwareVersion=2412
+-buildVersion=1
+-allPlatform
+-log=test.log
+
+
+
+Bmide deploy using tem.bat
+ 
+"D:\apps\siemens\tc_root\install\tem.bat" -update -templates=t5recaro -full -pf="D:\apps\siemens\tc_root\security\config1_infodba.pwf" -verbose -path="D:\apps\siemens\tc_root\bmide\workspace\t5recaro\output\wntx64\packaging\full_update\t5recaro_wntx64_1.0_2412_2025_07_15_10-17-52" -fullkit="D:\tc2412_wntx64
