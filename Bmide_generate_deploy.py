@@ -29,9 +29,11 @@ def build_dynamic_path(tc_root, template_name, platform, version):
 
 def build_command(tc_root, template_name, pf_file, platform, version, fullkit_path):
     tem_bat = os.path.join(tc_root, "install", "tem.bat")
+    pf_file = os.path.join(tc_root, "security", pf_file)
+
     dynamic_path = build_dynamic_path(tc_root, template_name, platform, version)
     command = (
-        f'"{tem_bat}" -update -templates={template_name} -full '
+        f' cmd /c"{tem_bat}" -update -templates={template_name} -full '
         f'-pf="{pf_file}" -verbose '
         f'-path="{dynamic_path}" '
         f'-fullkit="{fullkit_path}"'
