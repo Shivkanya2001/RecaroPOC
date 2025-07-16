@@ -28,6 +28,11 @@ BMIDE Package generate
 -log=test.log
 
 
+scipt for generate package 
+
+ python .\Bmide_generate_package.py  bmide_generate_package -tc_bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat"   -workspace_folder_name t5recaro -softwareVersion 2412 -buildVersion 1 -allPlatform
+
+
 
 Bmide deploy using tem.bat
  
