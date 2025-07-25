@@ -1,0 +1,6 @@
+﻿  TCApplication.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  Finished generating code
+  All 11 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  TCApplication.vcxproj -> C:\Users\infodba\source\repos\TCApplication\x64\Release\TCApplication.exe
