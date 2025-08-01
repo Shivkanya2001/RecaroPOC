@@ -24,19 +24,19 @@ def setup_logger():
 
 # Step 1: Set up Visual Studio environment using vcvarsall.bat
 def setup_visual_studio_env():
-    vcvars_path = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
-    
+    vcvars_path = r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
+
     if not os.path.exists(vcvars_path):
         logging.error(f"vcvarsall.bat not found at {vcvars_path}")
         return False
-    
+
     # Run vcvarsall.bat to set up the environment
     process = subprocess.run([vcvars_path, "x64"], shell=True, capture_output=True, text=True)
 
     if process.returncode != 0:
         logging.error(f"Failed to set up Visual Studio environment. Error: {process.stderr}")
         return False
-    
+
     logging.info("Visual Studio environment set up successfully.")
     return True
 
@@ -45,40 +45,40 @@ def extract_tc_root(tc_bat_path):
     if not os.path.exists(tc_bat_path):
         logging.error(f"tcvar.bat file not found at {tc_bat_path}")
         return None
-    
+
     # Run tcvar.bat to extract TC_ROOT
     process = subprocess.run([tc_bat_path], shell=True, capture_output=True, text=True)
 
     if process.returncode != 0:
         logging.error(f"Failed to run tcvar.bat. Error: {process.stderr}")
         return None
-    
+
     # Extract TC_ROOT value from the output of tcvar.bat
     for line in process.stdout.splitlines():
         if "TC_ROOT=" in line:
             tc_root = line.split("=", 1)[1].strip()
             logging.info(f"TC_ROOT extracted: {tc_root}")
             return tc_root
-    
+
     logging.error("TC_ROOT not found in tcvar.bat output.")
     return None
 
 # Step 3: Build the ITK Project
 def build_itk_project(project_dir):
     logging.info(f"Building ITK project at {project_dir}")
-    
+
     # Automatically derive the project name from the folder name
     project_name = os.path.basename(project_dir)
-    
+
     solution_path = os.path.join(project_dir, f"{project_name}.sln")
-    
+
     if not os.path.exists(solution_path):
         logging.error(f"Solution file {project_name}.sln not found in the project folder.")
         return None
 
     # MSBuild command to build the project
     msbuild_command = f'msbuild "{solution_path}" /p:Configuration=Release /p:Platform=x64'
-    
+
     # Run MSBuild to build the project
     process = subprocess.run(msbuild_command, capture_output=True, shell=True, text=True)
 
@@ -88,10 +88,9 @@ def build_itk_project(project_dir):
         return None
 
     logging.info(f"Build completed successfully for {project_name}")
-    
-    # Assuming the .exe is located in the project's bin folder
-    exe_path = os.path.join(project_dir, "Release", f"{project_name}.exe")
-    
+
+    # Assuming the .exe is located in the project's x64/Release folder
+    exe_path = os.path.join(project_dir, "x64", "Release", f"{project_name}.exe")
     if os.path.exists(exe_path):
         logging.info(f".exe file generated: {exe_path}")
         return exe_path
@@ -102,7 +101,7 @@ def build_itk_project(project_dir):
 # Step 4: Deploy the generated .exe to the bin folder
 def deploy_exe_to_bin(exe_path, bin_folder):
     logging.info(f"Deploying .exe to {bin_folder}")
-    
+
     # Ensure the bin folder exists
     os.makedirs(bin_folder, exist_ok=True)
 
