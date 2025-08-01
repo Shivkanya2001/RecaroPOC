@@ -36,10 +36,13 @@ Bmide deploy using tem.bat
 python .\Bmide_generate_deploy.py -tc_bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat" -template "b2testpoc" -pf_file "config1_infodba.pwf" -version "1.0_2412" -fullkit_path "D:\tc2412_wntx64" --path "D:\apps\siemens\tc_root\bmide\workspace\b2testpoc\output\wntx64\packaging\full_update\b2testpoc_wntx64_1.0_1_2412_2025_07_15_13-50-30"
 
 ---
+ITK Deployment exe genaration script 
 
-itk
+python .\tc_application.py --target-path C:\RecaroPythonProject\RecaroPOC\Custom_Utilities\TCApplication  --tc-bat "D:\apps\siemens\tc_root\tc_menu\tc_DEVBOX.bat"
 
-D:\apps\siemens\tc_root\tc_menu>C:\Users\infodba\source\repos\ConsoleApplication1\x64\Release\ConsoleApplication1.exe
-Login successful
 
-D:\apps\siemens\tc_root\tc_menu>
+
+
+
+
+
