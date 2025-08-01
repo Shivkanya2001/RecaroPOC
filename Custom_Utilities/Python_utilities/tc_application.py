@@ -25,7 +25,7 @@ def setup_logger():
 # Step 1: Set up Visual Studio environment using vcvarsall.bat
 def setup_visual_studio_env():
     # Correct path to vcvarsall.bat
-    vcvars_path = r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
+    vcvars_path = r"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat"
     
     if not os.path.exists(vcvars_path):
         logging.error(f"vcvarsall.bat not found at {vcvars_path}")
@@ -33,7 +33,7 @@ def setup_visual_studio_env():
 
     # Run vcvarsall.bat within PowerShell to set environment variables in the same session
     process = subprocess.run(
-        ["powershell", "-Command", f"& '{vcvars_path}' x64"],
+        [f"powershell.exe",f"& '{vcvars_path}' x64"],
         shell=True, capture_output=True, text=True
     )
 
@@ -156,9 +156,9 @@ def main():
         return
 
     # Step 6: Deploy the .exe to the bin folder
-    if not deploy_exe_to_bin(exe_path, bin_folder):
-        logging.error("Deployment failed.")
-        return
+    # if not deploy_exe_to_bin(exe_path, bin_folder):
+    #     logging.error("Deployment failed.")
+    #     return
 
     logging.info("Project successfully built and deployed!")
 
