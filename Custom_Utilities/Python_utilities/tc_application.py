@@ -40,12 +40,42 @@ def setup_visual_studio_env():
     logging.info("Visual Studio environment set up successfully.")
     return True
 
-# Step 2: Build the ITK Project
-def build_itk_project(project_dir, project_name):
-    logging.info(f"Building ITK project: {project_name} at {project_dir}")
+# Step 2: Extract TC_ROOT from the tcvar.bat or tcvar file
+def extract_tc_root(tc_bat_path):
+    if not os.path.exists(tc_bat_path):
+        logging.error(f"tcvar.bat file not found at {tc_bat_path}")
+        return None
+    
+    # Run tcvar.bat to extract TC_ROOT
+    process = subprocess.run([tc_bat_path], shell=True, capture_output=True, text=True)
+
+    if process.returncode != 0:
+        logging.error(f"Failed to run tcvar.bat. Error: {process.stderr}")
+        return None
+    
+    # Extract TC_ROOT value from the output of tcvar.bat
+    for line in process.stdout.splitlines():
+        if "TC_ROOT=" in line:
+            tc_root = line.split("=", 1)[1].strip()
+            logging.info(f"TC_ROOT extracted: {tc_root}")
+            return tc_root
+    
+    logging.error("TC_ROOT not found in tcvar.bat output.")
+    return None
+
+# Step 3: Build the ITK Project
+def build_itk_project(project_dir):
+    logging.info(f"Building ITK project at {project_dir}")
+    
+    # Automatically derive the project name from the folder name
+    project_name = os.path.basename(project_dir)
     
     solution_path = os.path.join(project_dir, f"{project_name}.sln")
     
+    if not os.path.exists(solution_path):
+        logging.error(f"Solution file {project_name}.sln not found in the project folder.")
+        return None
+
     # MSBuild command to build the project
     msbuild_command = f'msbuild "{solution_path}" /p:Configuration=Release /p:Platform=x64'
     
@@ -69,7 +99,7 @@ def build_itk_project(project_dir, project_name):
         logging.error(f".exe file not found in: {exe_path}")
         return None
 
-# Step 3: Deploy the generated .exe to the bin folder
+# Step 4: Deploy the generated .exe to the bin folder
 def deploy_exe_to_bin(exe_path, bin_folder):
     logging.info(f"Deploying .exe to {bin_folder}")
     
@@ -89,32 +119,41 @@ def deploy_exe_to_bin(exe_path, bin_folder):
 def main():
     # Setup argparse for command line arguments
     parser = argparse.ArgumentParser(description="Build and deploy ITK project.")
-    parser.add_argument("project_folder", help="Path to the ITK project folder")
-    parser.add_argument("project_name", help="Name of the ITK project (e.g., 'TCApplication')")
-    parser.add_argument("bin_folder", help="Path to the bin folder where the .exe should be deployed")
+    parser.add_argument("--target-path", required=True, help="Path to the ITK project folder")
+    parser.add_argument("--tc-bat", required=True, help="Path to tcvar.bat or file to extract TC_ROOT")
 
     args = parser.parse_args()
 
     setup_logger()
 
     # Step 1: Check if the ITK project folder exists
-    if not os.path.exists(args.project_folder):
-        logging.error(f"Deployment failed: Folder does not exist: {args.project_folder}")
+    if not os.path.exists(args.target_path):
+        logging.error(f"Deployment failed: Folder does not exist: {args.target_path}")
         return
 
-    # Step 2: Set up Visual Studio environment
+    # Step 2: Extract TC_ROOT using tcvar.bat
+    tc_root = extract_tc_root(args.tc_bat)
+    if not tc_root:
+        logging.error("Deployment failed: TC_ROOT extraction failed.")
+        return
+
+    # Step 3: Construct the bin folder path based on TC_ROOT
+    bin_folder = os.path.join(tc_root, "bin")
+    logging.info(f"Bin folder path: {bin_folder}")
+
+    # Step 4: Set up Visual Studio environment
     if not setup_visual_studio_env():
         logging.error("Deployment failed: Visual Studio environment setup failed.")
         return
 
-    # Step 3: Build the ITK project
-    exe_path = build_itk_project(args.project_folder, args.project_name)
+    # Step 5: Build the ITK project (no need to pass project name anymore)
+    exe_path = build_itk_project(args.target_path)
     if not exe_path:
         logging.error("Build failed, .exe not generated.")
         return
 
-    # Step 4: Deploy the .exe to the bin folder
-    if not deploy_exe_to_bin(exe_path, args.bin_folder):
+    # Step 6: Deploy the .exe to the bin folder
+    if not deploy_exe_to_bin(exe_path, bin_folder):
         logging.error("Deployment failed.")
         return
 
