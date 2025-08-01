@@ -25,13 +25,12 @@ def setup_logger():
 # Step 1: Set up Visual Studio environment using vcvarsall.bat
 def setup_visual_studio_env():
     vcvars_path = r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
-    
+
     if not os.path.exists(vcvars_path):
         logging.error(f"vcvarsall.bat not found at {vcvars_path}")
         return False
 
     # Run vcvarsall.bat within PowerShell to set environment variables in the same session
-    # This ensures that msbuild and other tools are available in the environment.
     process = subprocess.run(
         ["powershell", "-Command", f"& '{vcvars_path}' x64"],
         shell=True, capture_output=True, text=True
