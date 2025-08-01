@@ -24,8 +24,9 @@ def setup_logger():
 
 # Step 1: Set up Visual Studio environment using vcvarsall.bat
 def setup_visual_studio_env():
+    # Correct path to vcvarsall.bat
     vcvars_path = r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
-
+    
     if not os.path.exists(vcvars_path):
         logging.error(f"vcvarsall.bat not found at {vcvars_path}")
         return False
